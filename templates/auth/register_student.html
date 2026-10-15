@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Registration | Student Resources Management System{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 3rem 1.25rem 5rem; max-width: 580px;">
+  <div style="background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2.25rem; box-shadow: var(--shadow-lg);">
+    
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <span class="status-pill status-approved" style="margin-bottom: 0.5rem;">Student Account</span>
+      <h1 style="font-size: 1.6rem; font-weight: 800; color: #0f172a;">Join Student Needs Portal</h1>
+      <p style="color: #64748b; font-size: 0.875rem;">Access verified hostels, homely messes, and 24/7 study libraries</p>
+    </div>
+
+    <form action="{{ url_for('register_student') }}" method="POST" style="display: flex; flex-direction: column; gap: 1.15rem;">
+      <div class="form-group">
+        <label class="form-label">Full Name *</label>
+        <input type="text" name="name" class="form-input" placeholder="e.g. Yogiraj Pawar" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email Address *</label>
+        <input type="email" name="email" class="form-input" placeholder="e.g. yogiraj@student.com" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Mobile Contact Number *</label>
+        <input type="tel" name="phone" class="form-input" placeholder="e.g. 9876543210" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">College / University Name</label>
+        <input type="text" name="college_name" class="form-input" placeholder="e.g. Commerce Management and Computer Science College">
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Password *</label>
+          <input type="password" name="password" class="form-input" placeholder="••••••••" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Confirm Password *</label>
+          <input type="password" name="confirm_password" class="form-input" placeholder="••••••••" required>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 0.75rem;">
+        Create Student Account
+      </button>
+    </form>
+
+    <div style="border-top: 1px solid var(--border); margin-top: 2rem; padding-top: 1.25rem; text-align: center; font-size: 0.875rem; color: #64748b;">
+      Already registered? <a href="{{ url_for('login') }}" style="font-weight: 600;">Sign in here</a><br>
+      Are you a business owner? <a href="{{ url_for('register_provider') }}">Register as Service Provider</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

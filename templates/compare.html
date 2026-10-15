@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block title %}Compare Services | Student Resources Management System{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2.5rem 1.25rem 4rem;">
+  <div style="margin-bottom: 2rem;">
+    <div style="font-size: 0.8125rem; color: #64748b; margin-bottom: 0.25rem;">
+      <a href="{{ url_for('index') }}">Home</a> &rarr; <span>Compare Services</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h1 style="font-size: 1.85rem; font-weight: 800; color: #0f172a;">Compare Student Facilities</h1>
+        <p style="color: #64748b; font-size: 0.9375rem;">Side-by-side comparison matrix for transparent decision making</p>
+      </div>
+
+      <!-- Add Listing to comparison dropdown -->
+      <form action="{{ url_for('compare') }}" method="GET" style="display: flex; gap: 0.5rem; align-items: center;">
+        <input type="hidden" name="ids" id="hidden_ids_input" value="{{ selected_ids|join(',') }}">
+        <select class="form-select" id="add_compare_select" style="width: auto; min-width: 250px;">
+          <option value="">+ Add service to comparison...</option>
+          {% for item in all_available %}
+            {% if item.id not in selected_ids %}
+              <option value="{{ item.id }}">{{ item.title }} (₹{{ "{:,.0f}".format(item.pricing_amount) }} - {{ item.area }})</option>
+            {% endif %}
+          {% endfor %}
+        </select>
+        <button type="button" class="btn btn-primary btn-sm" onclick="addListingToCompare()">Add</button>
+      </form>
+    </div>
+  </div>
+
+  {% if listings %}
+    <div class="table-responsive">
+      <table class="comparison-table">
+        <tbody>
+          <!-- Photo & Title -->
+          <tr>
+            <th style="width: 200px;">Facility</th>
+            {% for item in listings %}
+              <td style="min-width: 240px; text-align: center;">
+                <img src="{{ item.image_url }}" alt="{{ item.title }}" style="width: 100%; height: 140px; object-fit: cover; border-radius: var(--radius-md); margin-bottom: 0.75rem;">
+                <span class="badge-tag badge-{{ item.category }}" style="position: static; margin-bottom: 0.5rem; display: inline-block;">{{ item.subcategory }}</span>
+                <h4 style="font-size: 1rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">{{ item.title }}</h4>
+                <a href="{{ url_for('listing_detail', id=item.id) }}" class="btn btn-primary btn-sm" style="width: 100%; margin-bottom: 0.35rem;">View Full Page</a>
+                <button type="button" class="btn btn-outline btn-sm" style="width: 100%; font-size: 0.75rem; color: #ef4444;" onclick="removeCompareId({{ item.id }})">Remove</button>
+              </td>
+            {% endfor %}
+          </tr>
+
+          <!-- Monthly Pricing -->
+          <tr>
+            <th>Monthly Charge</th>
+            {% for item in listings %}
+              <td>
+                <div style="font-size: 1.35rem; font-weight: 800; color: #2563eb;">₹{{ "{:,.0f}".format(item.pricing_amount) }}</div>
+                <div style="font-size: 0.75rem; color: #64748b;">{{ item.pricing_period }}</div>
+              </td>
+            {% endfor %}
+          </tr>
+
+          <!-- Security Deposit -->
+          <tr>
+            <th>Security Deposit</th>
+            {% for item in listings %}
+              <td>
+                {% if item.deposit_amount > 0 %}
+                  <strong>₹{{ "{:,.0f}".format(item.deposit_amount) }}</strong> (Refundable)
+                {% else %}
+                  <span style="color: #10b981; font-weight: 600;">₹0 (No Deposit)</span>
+                {% endif %}
+              </td>
+            {% endfor %}
+          </tr>
+
+          <!-- Location & Campus Area -->
+          <tr>
+            <th>Location & Area</th>
+            {% for item in listings %}
+              <td>
+                <strong>{{ item.area }}</strong>, {{ item.city }}<br>
+                <small style="color: #64748b;">{{ item.address }}</small>
+              </td>
+            {% endfor %}
+          </tr>
+
+          <!-- Rating & Reviews -->
+          <tr>
+            <th>Student Rating</th>
+            {% for item in listings %}
+              <td>
+                <span class="stars" style="color: var(--accent);">
+                  {% for i in range(5) %}
+                    {% if i < (item.avg_rating|round|int) %}★{% else %}☆{% endif %}
+                  {% endfor %}
+                </span>
+                <span style="font-weight: 700;">{{ "%.1f"|format(item.avg_rating) }}</span>
+                <div style="font-size: 0.75rem; color: #64748b;">({{ item.review_count }} verified reviews)</div>
+              </td>
+            {% endfor %}
+          </tr>
+
+          <!-- Capacity / Occupancy -->
+          <tr>
+            <th>Capacity / Sharing</th>
+            {% for item in listings %}
+              <td>{{ item.capacity_or_beds or 'Standard' }}</td>
+            {% endfor %}
+          </tr>
+
+          <!-- Timings & Curfew -->
+          <tr>
+            <th>Operating Timings / Gate</th>
+            {% for item in listings %}
+              <td>{{ item.timings or 'Open / Standard Hours' }}</td>
+            {% endfor %}
+          </tr>
+
+          <!-- Amenities List -->
+          <tr>
+            <th>Key Amenities</th>
+            {% for item in listings %}
+              <td>
+                <div style="display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.8125rem;">
+                  {% for am in (item.amenities or '').split(',') %}
+                    {% if am.strip() %}
+                      <div>✓ {{ am.strip() }}</div>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              </td>
+            {% endfor %}
+          </tr>
+
+          <!-- Rules -->
+          <tr>
+            <th>Rules & Policies</th>
+            {% for item in listings %}
+              <td style="font-size: 0.8125rem; color: #475569;">
+                {{ item.rules or 'Standard hostel/facility rules apply.' }}
+              </td>
+            {% endfor %}
+          </tr>
+
+          <!-- Provider & Contact -->
+          <tr>
+            <th>Host & Contact</th>
+            {% for item in listings %}
+              <td>
+                <strong>{{ item.business_name }}</strong><br>
+                <a href="tel:{{ item.contact_phone }}" style="font-size: 0.8125rem;">📞 {{ item.contact_phone }}</a>
+              </td>
+            {% endfor %}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div style="background: #ffffff; border: 1px dashed var(--border); border-radius: var(--radius-lg); padding: 4rem 2rem; text-align: center;">
+      <div style="font-size: 3rem; margin-bottom: 1rem;">⚖️</div>
+      <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">No Services Selected for Comparison</h2>
+      <p style="color: #64748b; max-width: 500px; margin: 0 auto 1.5rem;">
+        Select checkboxes on any listing card or pick a service from the dropdown above to view an in-depth side-by-side comparison of pricing, deposit, curfew, and amenities.
+      </p>
+      <a href="{{ url_for('search') }}" class="btn btn-primary">Browse Services to Compare</a>
+    </div>
+  {% endif %}
+</div>
+
+<script>
+function addListingToCompare() {
+  const sel = document.getElementById('add_compare_select');
+  const val = sel.value;
+  if (!val) return;
+  
+  let currentIds = "{{ selected_ids|join(',') }}".split(',').filter(x => x.length > 0);
+  if (!currentIds.includes(val)) {
+    currentIds.push(val);
+  }
+  window.location.href = `/compare?ids=${currentIds.join(',')}`;
+}
+
+function removeCompareId(idToRemove) {
+  let currentIds = "{{ selected_ids|join(',') }}".split(',').filter(x => x.length > 0);
+  currentIds = currentIds.filter(x => parseInt(x) !== idToRemove);
+  window.location.href = `/compare?ids=${currentIds.join(',')}`;
+}
+</script>
+{% endblock %}

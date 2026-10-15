@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In | Student Resources Management System{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 3rem 1.25rem 5rem; max-width: 520px;">
+  <div style="background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2.25rem; box-shadow: var(--shadow-lg);">
+    
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <div class="brand-icon" style="margin: 0 auto 0.75rem auto;">🎓</div>
+      <h1 style="font-size: 1.6rem; font-weight: 800; color: #0f172a;">Welcome Back</h1>
+      <p style="color: #64748b; font-size: 0.875rem;">Sign in to your Student, Provider, or Admin account</p>
+    </div>
+
+    <!-- Quick Demo Logins for Evaluator -->
+    <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.75rem;">
+      <div style="font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.35rem;">
+        <span>⚡ Quick 1-Click Demo Login</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;">
+        <a href="{{ url_for('quick_login', role='student') }}" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 0.35rem 0.2rem; background: #ffffff;">
+          🎓 Student
+        </a>
+        <a href="{{ url_for('quick_login', role='provider') }}" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 0.35rem 0.2rem; background: #ffffff;">
+          🏢 Provider
+        </a>
+        <a href="{{ url_for('quick_login', role='admin') }}" class="btn btn-outline btn-sm" style="font-size: 0.75rem; padding: 0.35rem 0.2rem; background: #ffffff;">
+          🛡️ Admin
+        </a>
+      </div>
+    </div>
+
+    <!-- Main Login Form -->
+    <form action="{{ url_for('login', next=request.args.get('next')) }}" method="POST" style="display: flex; flex-direction: column; gap: 1.15rem;">
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" name="email" class="form-input" placeholder="name@domain.com" required autofocus>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" name="password" class="form-input" placeholder="••••••••" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 0.5rem;">
+        Sign In to Portal
+      </button>
+    </form>
+
+    <div style="border-top: 1px solid var(--border); margin-top: 2rem; padding-top: 1.5rem; text-align: center; font-size: 0.875rem; color: #64748b;">
+      Don't have an account yet?<br>
+      <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 0.5rem;">
+        <a href="{{ url_for('register_student') }}" style="font-weight: 600;">Register as Student</a>
+        <span>•</span>
+        <a href="{{ url_for('register_provider') }}" style="font-weight: 600;">List as Provider</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

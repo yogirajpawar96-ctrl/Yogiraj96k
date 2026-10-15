@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Control Console | Student Resources Management System{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2.5rem 1.25rem 5rem;">
+  
+  <!-- Admin Header -->
+  <div style="background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.75rem; box-shadow: var(--shadow-sm); margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+        <span class="status-pill status-approved" style="background: #fee2e2; color: #991b1b; font-weight: 700;">🛡️ Administrator Access</span>
+        <span style="font-size: 0.8125rem; color: #64748b;">Centralized Portal Governance</span>
+      </div>
+      <h1 style="font-size: 1.75rem; font-weight: 800; color: #0f172a;">Admin Command Center</h1>
+      <p style="color: #64748b; font-size: 0.875rem;">Manage service verifications, provider approvals, and review moderations</p>
+    </div>
+
+    <!-- Quick Navigation Buttons -->
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+      <a href="{{ url_for('admin_listings') }}" class="btn btn-outline btn-sm">
+        🏠 Listings ({% if stats.pending_listings > 0 %}<strong style="color: #f59e0b;">{{ stats.pending_listings }} pending</strong>{% else %}{{ stats.total_listings }}{% endif %})
+      </a>
+      <a href="{{ url_for('admin_providers') }}" class="btn btn-outline btn-sm">
+        🏢 Providers ({% if stats.pending_providers > 0 %}<strong style="color: #f59e0b;">{{ stats.pending_providers }} pending</strong>{% else %}{{ stats.total_providers }}{% endif %})
+      </a>
+      <a href="{{ url_for('admin_reviews') }}" class="btn btn-outline btn-sm">
+        ⭐ Reviews ({{ stats.total_reviews }})
+      </a>
+      <a href="{{ url_for('admin_users') }}" class="btn btn-outline btn-sm">
+        👥 Users ({{ stats.total_users }})
+      </a>
+    </div>
+  </div>
+
+  <!-- Key Metrics Grid -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
+    <div style="background: #ffffff; padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: var(--shadow-sm);">
+      <div style="font-size: 0.75rem; color: #64748b; font-weight: 600;">PENDING LISTINGS</div>
+      <div style="font-size: 2rem; font-weight: 800; color: #f59e0b;">{{ stats.pending_listings }}</div>
+      <small style="color: #64748b;">Awaiting verification</small>
+    </div>
+
+    <div style="background: #ffffff; padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: var(--shadow-sm);">
+      <div style="font-size: 0.75rem; color: #64748b; font-weight: 600;">APPROVED LISTINGS</div>
+      <div style="font-size: 2rem; font-weight: 800; color: #10b981;">{{ stats.approved_listings }}</div>
+      <small style="color: #64748b;">Live in public search</small>
+    </div>
+
+    <div style="background: #ffffff; padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: var(--shadow-sm);">
+      <div style="font-size: 0.75rem; color: #64748b; font-weight: 600;">PENDING PROVIDERS</div>
+      <div style="font-size: 2rem; font-weight: 800; color: #ef4444;">{{ stats.pending_providers }}</div>
+      <small style="color: #64748b;">Awaiting ID review</small>
+    </div>
+
+    <div style="background: #ffffff; padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: var(--shadow-sm);">
+      <div style="font-size: 0.75rem; color: #64748b; font-weight: 600;">REGISTERED STUDENTS</div>
+      <div style="font-size: 2rem; font-weight: 800; color: #2563eb;">{{ stats.total_students }}</div>
+      <small style="color: #64748b;">Active accounts</small>
+    </div>
+
+    <div style="background: #ffffff; padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: var(--shadow-sm);">
+      <div style="font-size: 0.75rem; color: #64748b; font-weight: 600;">STUDENT REVIEWS</div>
+      <div style="font-size: 2rem; font-weight: 800; color: #7c3aed;">{{ stats.total_reviews }}</div>
+      <small style="color: #64748b;">Across all services</small>
+    </div>
+  </div>
+
+  <!-- Queue 1: Pending Listings Requiring Verification -->
+  <div class="info-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
+      <h2 style="font-size: 1.2rem; font-weight: 700; color: #0f172a;">
+        ⏳ Pending Listings For Approval ({{ pending_listings|length }})
+      </h2>
+      <a href="{{ url_for('admin_listings') }}" style="font-size: 0.8125rem; font-weight: 600;">View All Listings &rarr;</a>
+    </div>
+
+    {% if pending_listings %}
+      <div class="table-responsive">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Service Title</th>
+              <th>Category</th>
+              <th>Location</th>
+              <th>Price</th>
+              <th>Provider Info</th>
+              <th>Approval Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in pending_listings %}
+              <tr>
+                <td>#{{ item.id }}</td>
+                <td>
+                  <strong style="color: #0f172a;">{{ item.title }}</strong><br>
+                  <small style="color: #64748b;">{{ item.subcategory }}</small>
+                </td>
+                <td>
+                  <span class="badge-tag badge-{{ item.category }}" style="position: static; font-size: 0.7rem;">{{ item.category }}</span>
+                </td>
+                <td>{{ item.area }}, {{ item.city }}</td>
+                <td style="font-weight: 700; color: #2563eb;">₹{{ "{:,.0f}".format(item.pricing_amount) }}</td>
+                <td>
+                  <strong>{{ item.business_name }}</strong><br>
+                  <small>📞 {{ item.provider_phone }}</small>
+                </td>
+                <td>
+                  <div style="display: flex; gap: 0.35rem;">
+                    <form action="{{ url_for('admin_update_listing_status', id=item.id) }}" method="POST">
+                      <input type="hidden" name="status" value="approved">
+                      <button type="submit" class="btn btn-success btn-sm" title="Approve and make live">✓ Approve</button>
+                    </form>
+                    <form action="{{ url_for('admin_update_listing_status', id=item.id) }}" method="POST">
+                      <input type="hidden" name="status" value="rejected">
+                      <button type="submit" class="btn btn-danger btn-sm" title="Reject listing">✕ Reject</button>
+                    </form>
+                    <a href="{{ url_for('listing_detail', id=item.id) }}" class="btn btn-outline btn-sm" target="_blank">Preview</a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div style="padding: 1.5rem 0; text-align: center; color: #10b981; font-weight: 500;">
+        ✓ All listing approval queues are cleared! No pending listings right now.
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Queue 2: Pending Provider Verifications -->
+  <div class="info-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
+      <h2 style="font-size: 1.2rem; font-weight: 700; color: #0f172a;">
+        🏢 Provider Account Verification Queue ({{ pending_providers|length }})
+      </h2>
+      <a href="{{ url_for('admin_providers') }}" style="font-size: 0.8125rem; font-weight: 600;">View All Providers &rarr;</a>
+    </div>
+
+    {% if pending_providers %}
+      <div class="table-responsive">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Business Name</th>
+              <th>Owner Name</th>
+              <th>Email</th>
+              <th>Contact Phone</th>
+              <th>Address</th>
+              <th>Verification Decision</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for prov in pending_providers %}
+              <tr>
+                <td>#{{ prov.id }}</td>
+                <td><strong>{{ prov.business_name }}</strong></td>
+                <td>{{ prov.name }}</td>
+                <td>{{ prov.email }}</td>
+                <td>📞 {{ prov.phone }}</td>
+                <td style="max-width: 200px; font-size: 0.8125rem;">{{ prov.address }}</td>
+                <td>
+                  <div style="display: flex; gap: 0.35rem;">
+                    <form action="{{ url_for('admin_verify_provider', id=prov.id) }}" method="POST">
+                      <input type="hidden" name="action" value="approve">
+                      <button type="submit" class="btn btn-success btn-sm">✓ Verify</button>
+                    </form>
+                    <form action="{{ url_for('admin_verify_provider', id=prov.id) }}" method="POST">
+                      <input type="hidden" name="action" value="reject">
+                      <button type="submit" class="btn btn-danger btn-sm">✕ Reject</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div style="padding: 1.5rem 0; text-align: center; color: #10b981; font-weight: 500;">
+        ✓ All registered service providers are verified!
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

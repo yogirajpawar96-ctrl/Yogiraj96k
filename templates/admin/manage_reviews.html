@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Review Moderation | Admin Console{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2.5rem 1.25rem 5rem;">
+  
+  <div style="margin-bottom: 2rem;">
+    <a href="{{ url_for('admin_dashboard') }}" style="font-size: 0.8125rem; color: #64748b;">&larr; Back to Admin Console</a>
+    <h1 style="font-size: 1.85rem; font-weight: 800; color: #0f172a; margin-top: 0.25rem;">Student Feedback Moderation</h1>
+    <p style="color: #64748b; font-size: 0.9375rem;">Audit student reviews and ratings to preserve platform integrity and prevent spam</p>
+  </div>
+
+  <div class="info-card">
+    {% if reviews %}
+      <div class="table-responsive">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Student</th>
+              <th>Target Facility</th>
+              <th>Rating</th>
+              <th>Feedback Comment</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Moderation Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for rev in reviews %}
+              <tr>
+                <td>#{{ rev.id }}</td>
+                <td>
+                  <strong>{{ rev.student_name }}</strong><br>
+                  <small style="color: #64748b;">{{ rev.student_email }}</small>
+                </td>
+                <td>
+                  <a href="{{ url_for('listing_detail', id=rev.listing_id) }}" style="font-weight: 600;" target="_blank">
+                    {{ rev.listing_title }}
+                  </a>
+                </td>
+                <td>
+                  <span style="color: var(--accent); font-weight: 700;">
+                    {% for i in range(rev.rating) %}★{% endfor %}
+                  </span> ({{ rev.rating }}/5)
+                </td>
+                <td style="max-width: 300px; font-size: 0.8125rem; color: #334155; line-height: 1.5;">
+                  {{ rev.comment }}
+                </td>
+                <td style="font-size: 0.75rem; color: #64748b;">{{ rev.created_at[:10] }}</td>
+                <td>
+                  <span class="status-pill status-{{ rev.status }}">{{ rev.status }}</span>
+                </td>
+                <td>
+                  <div style="display: flex; gap: 0.35rem;">
+                    {% if rev.status != 'approved' %}
+                      <form action="{{ url_for('admin_update_review_status', id=rev.id) }}" method="POST">
+                        <input type="hidden" name="action" value="approved">
+                        <button type="submit" class="btn btn-success btn-sm" style="font-size: 0.75rem;">Approve</button>
+                      </form>
+                    {% endif %}
+                    {% if rev.status != 'flagged' %}
+                      <form action="{{ url_for('admin_update_review_status', id=rev.id) }}" method="POST">
+                        <input type="hidden" name="action" value="flagged">
+                        <button type="submit" class="btn btn-outline btn-sm" style="font-size: 0.75rem; color: #f59e0b;">Flag</button>
+                      </form>
+                    {% endif %}
+                    <form action="{{ url_for('admin_update_review_status', id=rev.id) }}" method="POST" onsubmit="return confirm('Delete review permanently?');">
+                      <input type="hidden" name="action" value="delete">
+                      <button type="submit" class="btn btn-danger btn-sm" style="font-size: 0.75rem;">Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div style="text-align: center; padding: 2.5rem 1rem; color: #64748b;">
+        No reviews to moderate yet.
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

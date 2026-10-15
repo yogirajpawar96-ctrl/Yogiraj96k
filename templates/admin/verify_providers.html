@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Verify Providers | Admin Console{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2.5rem 1.25rem 5rem;">
+  
+  <div style="margin-bottom: 2rem;">
+    <a href="{{ url_for('admin_dashboard') }}" style="font-size: 0.8125rem; color: #64748b;">&larr; Back to Admin Console</a>
+    <h1 style="font-size: 1.85rem; font-weight: 800; color: #0f172a; margin-top: 0.25rem;">Service Provider Verification</h1>
+    <p style="color: #64748b; font-size: 0.9375rem;">Verify business credentials and authentic phone contacts of accommodation, mess, and library partners</p>
+  </div>
+
+  <div class="info-card">
+    {% if providers %}
+      <div class="table-responsive">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Business Name</th>
+              <th>Owner Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Registered Address</th>
+              <th>Listings</th>
+              <th>Status</th>
+              <th>Verification Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for prov in providers %}
+              <tr>
+                <td>#{{ prov.id }}</td>
+                <td><strong style="color: #0f172a;">{{ prov.business_name }}</strong></td>
+                <td>{{ prov.name }}</td>
+                <td>{{ prov.email }}</td>
+                <td>📞 {{ prov.phone }}</td>
+                <td style="max-width: 200px; font-size: 0.8125rem; color: #475569;">{{ prov.address }}</td>
+                <td style="font-weight: 600;">{{ prov.listing_count }}</td>
+                <td>
+                  {% if prov.is_verified == 1 %}
+                    <span class="status-pill status-approved">✓ Verified</span>
+                  {% elif prov.is_verified == 0 %}
+                    <span class="status-pill status-pending">Pending</span>
+                  {% else %}
+                    <span class="status-pill status-rejected">Rejected</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div style="display: flex; gap: 0.35rem;">
+                    {% if prov.is_verified != 1 %}
+                      <form action="{{ url_for('admin_verify_provider', id=prov.id) }}" method="POST">
+                        <input type="hidden" name="action" value="approve">
+                        <button type="submit" class="btn btn-success btn-sm" style="font-size: 0.75rem;">Verify</button>
+                      </form>
+                    {% endif %}
+                    {% if prov.is_verified != 2 %}
+                      <form action="{{ url_for('admin_verify_provider', id=prov.id) }}" method="POST">
+                        <input type="hidden" name="action" value="reject">
+                        <button type="submit" class="btn btn-danger btn-sm" style="font-size: 0.75rem;">Reject</button>
+                      </form>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div style="text-align: center; padding: 2.5rem 1rem; color: #64748b;">
+        No providers registered yet.
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

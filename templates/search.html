@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Services | Student Resources Management System{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2rem 1.25rem 4rem;">
+  <!-- Breadcrumb and Page Header -->
+  <div style="margin-bottom: 1.5rem;">
+    <div style="font-size: 0.8125rem; color: #64748b; margin-bottom: 0.25rem;">
+      <a href="{{ url_for('index') }}">Home</a> &rarr; <span>Search & Filter Services</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h1 style="font-size: 1.85rem; font-weight: 800; color: #0f172a;">Search & Filter Services</h1>
+        <p style="color: #64748b; font-size: 0.9375rem;">Showing {{ total_results }} verified student services matching your criteria</p>
+      </div>
+      <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <span style="font-size: 0.875rem; color: #64748b;">Sort By:</span>
+        <select form="search-filter-form" name="sort_by" class="form-select" style="width: auto; padding: 0.4rem 0.75rem;" onchange="this.form.submit()">
+          <option value="popular" {% if filters.sort_by == 'popular' %}selected{% endif %}>Most Popular</option>
+          <option value="rating" {% if filters.sort_by == 'rating' %}selected{% endif %}>Highest Rated</option>
+          <option value="price_asc" {% if filters.sort_by == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+          <option value="price_desc" {% if filters.sort_by == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+          <option value="newest" {% if filters.sort_by == 'newest' %}selected{% endif %}>Newest First</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layout: Filters Sidebar + Results Grid -->
+  <div style="display: grid; grid-template-columns: 280px 1fr; gap: 2rem; align-items: start;">
+    
+    <!-- Filter Sidebar -->
+    <aside style="background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-sm); position: sticky; top: 5.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border);">
+        <h3 style="font-size: 1rem; font-weight: 700; color: #0f172a;">Filters</h3>
+        <a href="{{ url_for('search') }}" style="font-size: 0.8125rem; color: #ef4444; font-weight: 600;">Reset All</a>
+      </div>
+
+      <form id="search-filter-form" action="{{ url_for('search') }}" method="GET" style="display: flex; flex-direction: column; gap: 1.25rem;">
+        
+        <!-- Keyword Search -->
+        <div class="form-group">
+          <label class="form-label">Keyword or Facility</label>
+          <input type="text" name="q" class="form-input" value="{{ filters.q }}" placeholder="Search title, description...">
+        </div>
+
+        <!-- Service Category -->
+        <div class="form-group">
+          <label class="form-label">Service Category</label>
+          <select name="category" class="form-select">
+            <option value="">All Categories</option>
+            <option value="accommodation" {% if filters.category == 'accommodation' %}selected{% endif %}>🏠 Hostels & PG Rooms</option>
+            <option value="mess" {% if filters.category == 'mess' %}selected{% endif %}>🍲 Mess & Dining</option>
+            <option value="library" {% if filters.category == 'library' %}selected{% endif %}>📚 Private Study Libraries</option>
+          </select>
+        </div>
+
+        <!-- Area / Campus Proximity -->
+        <div class="form-group">
+          <label class="form-label">Area / Location</label>
+          <select name="area" class="form-select">
+            <option value="">All Areas</option>
+            {% for a in areas %}
+              <option value="{{ a }}" {% if filters.area == a %}selected{% endif %}>{{ a }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- City Dropdown -->
+        <div class="form-group">
+          <label class="form-label">City</label>
+          <select name="city" class="form-select">
+            <option value="">All Cities</option>
+            {% for c in cities %}
+              <option value="{{ c }}" {% if filters.city == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Maximum Budget Filter -->
+        <div class="form-group">
+          <label class="form-label">Max Budget (₹/Month)</label>
+          <input type="number" name="max_price" class="form-input" value="{{ filters.max_price }}" placeholder="e.g. 7000" step="500">
+          <div style="display: flex; gap: 0.35rem; margin-top: 0.4rem; flex-wrap: wrap;">
+            <button type="button" class="btn btn-outline btn-sm" style="font-size: 0.7rem; padding: 0.2rem 0.5rem;" onclick="document.getElementsByName('max_price')[0].value='3500'; document.getElementById('search-filter-form').submit();">&le; ₹3,500</button>
+            <button type="button" class="btn btn-outline btn-sm" style="font-size: 0.7rem; padding: 0.2rem 0.5rem;" onclick="document.getElementsByName('max_price')[0].value='6000'; document.getElementById('search-filter-form').submit();">&le; ₹6,000</button>
+            <button type="button" class="btn btn-outline btn-sm" style="font-size: 0.7rem; padding: 0.2rem 0.5rem;" onclick="document.getElementsByName('max_price')[0].value='8500'; document.getElementById('search-filter-form').submit();">&le; ₹8,500</button>
+          </div>
+        </div>
+
+        <!-- Key Preferences / Amenity Filter -->
+        <div class="form-group">
+          <label class="form-label">Key Amenity / Preference</label>
+          <select name="amenity" class="form-select">
+            <option value="">Any Amenity</option>
+            <option value="Wi-Fi" {% if filters.amenity == 'Wi-Fi' %}selected{% endif %}>High-Speed Wi-Fi</option>
+            <option value="Air Conditioning" {% if filters.amenity == 'Air Conditioning' %}selected{% endif %}>Air Conditioning (AC)</option>
+            <option value="Hot Water" {% if filters.amenity == 'Hot Water' %}selected{% endif %}>24/7 Hot Water</option>
+            <option value="Food Included" {% if filters.amenity == 'Food Included' %}selected{% endif %}>Food Included</option>
+            <option value="CCTV" {% if filters.amenity == 'CCTV' %}selected{% endif %}>CCTV Surveillance</option>
+            <option value="Tiffin" {% if filters.amenity == 'Tiffin' %}selected{% endif %}>Tiffin / Dabba Delivery</option>
+            <option value="Socket" {% if filters.amenity == 'Socket' %}selected{% endif %}>Individual Power Sockets</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem;">Apply Filters</button>
+      </form>
+    </aside>
+
+    <!-- Results Section -->
+    <main>
+      {% if listings %}
+        <div class="listing-grid" style="margin-top: 0;">
+          {% for item in listings %}
+            <div class="listing-card">
+              <div class="listing-thumb">
+                <img src="{{ item.image_url }}" alt="{{ item.title }}" loading="lazy">
+                <span class="badge-tag badge-{{ item.category }}">{{ item.subcategory }}</span>
+                <span class="badge-verified">✓ Verified</span>
+              </div>
+              <div class="listing-body">
+                <div class="listing-location">📍 {{ item.area }}, {{ item.city }}</div>
+                <a href="{{ url_for('listing_detail', id=item.id) }}">
+                  <h3 class="listing-title">{{ item.title }}</h3>
+                </a>
+                <div class="listing-rating">
+                  <span class="stars">
+                    {% for i in range(5) %}
+                      {% if i < (item.avg_rating|round|int) %}★{% else %}☆{% endif %}
+                    {% endfor %}
+                  </span>
+                  <span class="rating-score">{{ "%.1f"|format(item.avg_rating) }}</span>
+                  <span class="rating-count">({{ item.review_count }} reviews)</span>
+                </div>
+
+                <div class="listing-amenities">
+                  {% for a in (item.amenities or '').split(',')[:3] %}
+                    {% if a.strip() %}
+                      <span class="amenity-chip">{{ a.strip() }}</span>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+
+                <div class="listing-footer">
+                  <div class="listing-price">
+                    <span class="price-val">₹{{ "{:,.0f}".format(item.pricing_amount) }}</span>
+                    <span class="price-period">{{ item.pricing_period }}</span>
+                  </div>
+                  <div class="listing-actions">
+                    <!-- Compare Checkbox -->
+                    <label class="btn btn-outline btn-sm" style="cursor: pointer;" title="Select to compare">
+                      <input type="checkbox" class="js-compare-check" value="{{ item.id }}" style="margin-right: 4px;"> Compare
+                    </label>
+
+                    <!-- Student Bookmark Button -->
+                    {% if current_user and current_user.role == 'student' %}
+                      <button class="btn btn-outline btn-sm js-bookmark-btn {% if item.id in saved_ids %}active{% endif %}" data-listing-id="{{ item.id }}" title="Save to bookmarks">
+                        <span class="bookmark-icon">{% if item.id in saved_ids %}★ Saved{% else %}☆ Save{% endif %}</span>
+                      </button>
+                    {% endif %}
+
+                    <a href="{{ url_for('listing_detail', id=item.id) }}" class="btn btn-primary btn-sm">Details</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <!-- Zero State -->
+        <div style="background: #ffffff; border: 1px dashed var(--border); border-radius: var(--radius-lg); padding: 4rem 2rem; text-align: center;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
+          <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">No Matching Services Found</h2>
+          <p style="color: #64748b; max-width: 450px; margin: 0 auto 1.5rem;">
+            We couldn't find any listings matching your active filters. Try expanding your price limit or clearing filters to see all available services.
+          </p>
+          <a href="{{ url_for('search') }}" class="btn btn-primary">Reset Filters</a>
+        </div>
+      {% endif %}
+    </main>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Service Provider Registration | Student Resources Management System{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 3rem 1.25rem 5rem; max-width: 620px;">
+  <div style="background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2.25rem; box-shadow: var(--shadow-lg);">
+    
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <span class="status-pill status-contacted" style="margin-bottom: 0.5rem;">🏢 Business / Owner Portal</span>
+      <h1 style="font-size: 1.6rem; font-weight: 800; color: #0f172a;">Register as Service Provider</h1>
+      <p style="color: #64748b; font-size: 0.875rem;">List hostels, PGs, mess dining, or private libraries to students</p>
+    </div>
+
+    <form action="{{ url_for('register_provider') }}" method="POST" style="display: flex; flex-direction: column; gap: 1.15rem;">
+      <div class="form-group">
+        <label class="form-label">Owner / Contact Person Full Name *</label>
+        <input type="text" name="name" class="form-input" placeholder="e.g. Ramesh Sharma" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Business / Facility Name *</label>
+        <input type="text" name="business_name" class="form-input" placeholder="e.g. Sharma Hostels & PG Living" required>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Email Address *</label>
+          <input type="email" name="email" class="form-input" placeholder="ramesh@hostels.com" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Official Mobile Phone *</label>
+          <input type="tel" name="phone" class="form-input" placeholder="9822011223" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Business Office / Premises Address *</label>
+        <textarea name="address" class="form-textarea" rows="2" placeholder="Complete street address, city, landmark" required></textarea>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Password *</label>
+          <input type="password" name="password" class="form-input" placeholder="••••••••" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Confirm Password *</label>
+          <input type="password" name="confirm_password" class="form-input" placeholder="••••••••" required>
+        </div>
+      </div>
+
+      <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-md); padding: 0.85rem; font-size: 0.8125rem; color: #1e40af;">
+        ℹ️ <strong>Admin Verification Policy:</strong> After registration, all provider accounts and listings are inspected and approved by the college administrator before going live.
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 0.5rem;">
+        Register Provider Account
+      </button>
+    </form>
+
+    <div style="border-top: 1px solid var(--border); margin-top: 2rem; padding-top: 1.25rem; text-align: center; font-size: 0.875rem; color: #64748b;">
+      Already have a provider account? <a href="{{ url_for('login') }}" style="font-weight: 600;">Log in here</a><br>
+      Looking for student rooms instead? <a href="{{ url_for('register_student') }}">Sign up as Student</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

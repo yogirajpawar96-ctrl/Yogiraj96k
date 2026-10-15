@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}User Management | Admin Console{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2.5rem 1.25rem 5rem;">
+  
+  <div style="margin-bottom: 2rem;">
+    <a href="{{ url_for('admin_dashboard') }}" style="font-size: 0.8125rem; color: #64748b;">&larr; Back to Admin Console</a>
+    <h1 style="font-size: 1.85rem; font-weight: 800; color: #0f172a; margin-top: 0.25rem;">Platform Users</h1>
+    <p style="color: #64748b; font-size: 0.9375rem;">Manage all registered students, service providers, and administrative staff accounts</p>
+  </div>
+
+  <div class="info-card">
+    <div class="table-responsive">
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Role</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>College / Business</th>
+            <th>Status</th>
+            <th>Registration Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+            <tr>
+              <td>#{{ u.id }}</td>
+              <td>
+                {% if u.role == 'admin' %}
+                  <span class="badge-tag" style="position: static; background: #0f172a; color: #ffffff;">Admin</span>
+                {% elif u.role == 'provider' %}
+                  <span class="badge-tag badge-accommodation" style="position: static;">Provider</span>
+                {% else %}
+                  <span class="badge-tag badge-library" style="position: static;">Student</span>
+                {% endif %}
+              </td>
+              <td><strong style="color: #0f172a;">{{ u.name }}</strong></td>
+              <td>{{ u.email }}</td>
+              <td>{{ u.phone or 'N/A' }}</td>
+              <td>{{ u.business_name or u.college_name or 'Main Campus' }}</td>
+              <td>
+                {% if u.role == 'provider' %}
+                  {% if u.is_verified == 1 %}
+                    <span class="status-pill status-approved">Verified</span>
+                  {% else %}
+                    <span class="status-pill status-pending">Pending</span>
+                  {% endif %}
+                {% else %}
+                  <span class="status-pill status-approved">Active</span>
+                {% endif %}
+              </td>
+              <td style="font-size: 0.75rem; color: #64748b;">{{ u.created_at[:10] }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

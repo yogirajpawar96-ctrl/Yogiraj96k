@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}About Project & Synopsis | Student Resources Management System{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2.5rem 1.25rem 4rem; max-width: 900px;">
+  <!-- College Header Box -->
+  <div style="background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 2.5rem; box-shadow: var(--shadow-md); margin-bottom: 2.5rem; text-align: center;">
+    <div style="font-size: 0.875rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem;">
+      Commerce Management and Computer Science College
+    </div>
+    <h1 style="font-size: 2.25rem; font-weight: 800; color: #0f172a; margin-bottom: 0.5rem;">
+      Student Resources Management System
+    </h1>
+    <div style="font-size: 1rem; color: #475569; margin-bottom: 1.5rem;">
+      <strong>PROJECT SYNOPSIS — ACADEMIC YEAR 2026–2027</strong>
+    </div>
+
+    <div style="display: inline-flex; gap: 2rem; background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem 2rem; text-align: left;">
+      <div>
+        <div style="font-size: 0.75rem; color: #64748b; font-weight: 600;">SUBMITTED BY:</div>
+        <div style="font-weight: 700; color: #0f172a;">1. Yogiraj Pawar</div>
+        <div style="font-weight: 700; color: #0f172a;">2. Onkar Shinde</div>
+      </div>
+      <div style="border-left: 1px solid var(--border); padding-left: 2rem;">
+        <div style="font-size: 0.75rem; color: #64748b; font-weight: 600;">TECHNOLOGY STACK:</div>
+        <div style="font-weight: 600; color: #0f172a;">Python, MySQL / SQLite</div>
+        <div style="font-size: 0.8125rem; color: #64748b;">HTML5, CSS3, JavaScript</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Synopsis Structured Sections -->
+  <div style="display: flex; flex-direction: column; gap: 2rem;">
+    <!-- 1. Introduction -->
+    <div class="info-card">
+      <h3>1. INTRODUCTION</h3>
+      <p style="color: #334155; line-height: 1.8;">
+        Student Needs Portal is a web-based application developed to help students easily find essential services such as hostels, rental rooms, mess facilities, and private libraries. The system acts as a centralized platform where students can search, compare, and access verified information about these services.
+      </p>
+      <p style="color: #334155; line-height: 1.8; margin-top: 0.75rem;">
+        Many students relocate to new cities for education and face difficulties finding reliable accommodation, food facilities, and study environments. This project aims to solve that problem by providing a single digital platform that connects students with service providers and simplifies the search process.
+      </p>
+    </div>
+
+    <!-- 2. Problem Statement -->
+    <div class="info-card">
+      <h3>2. PROBLEM STATEMENT</h3>
+      <p style="color: #334155; line-height: 1.8; margin-bottom: 0.75rem;">
+        Students often depend on social media groups, local contacts, and offline inquiries to find accommodation and other facilities. This creates several problems:
+      </p>
+      <ul style="padding-left: 1.5rem; color: #334155; line-height: 1.8;">
+        <li>Lack of verified information.</li>
+        <li>Time-consuming manual searching.</li>
+        <li>Difficulty comparing available options.</li>
+        <li>No centralized platform for multiple student services.</li>
+        <li>Limited access to reviews and feedback.</li>
+      </ul>
+    </div>
+
+    <!-- 3. Objectives -->
+    <div class="info-card">
+      <h3>3. OBJECTIVES OF THE PROJECT</h3>
+      <ul style="padding-left: 1.5rem; color: #334155; line-height: 1.8;">
+        <li>To develop a centralized student service portal.</li>
+        <li>To provide hostel and room rental listings.</li>
+        <li>To display mess services with pricing and details.</li>
+        <li>To provide information about private libraries.</li>
+        <li>To allow students to search and filter services.</li>
+        <li>To maintain verified listings through admin approval.</li>
+        <li>To improve transparency through ratings and reviews.</li>
+        <li>To reduce the effort required to find essential facilities.</li>
+      </ul>
+    </div>
+
+    <!-- 4. Scope -->
+    <div class="info-card">
+      <h3>4. SCOPE OF THE PROJECT</h3>
+      <p style="color: #334155; line-height: 1.8; margin-bottom: 0.75rem;">
+        The project focuses on providing students with easy access to accommodation, mess services, and private libraries through a web application.
+      </p>
+      <p style="color: #334155; line-height: 1.8; margin-bottom: 0.5rem;">
+        The system supports three types of users:
+      </p>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 0.5rem;">
+        <div style="background: #f8fafc; padding: 1rem; border-radius: var(--radius-md); border-left: 3px solid var(--primary);">
+          <strong style="color: #0f172a;">Student</strong>
+          <p style="font-size: 0.8125rem; color: #64748b; margin-top: 0.25rem;">Search services, compare facilities, submit ratings and reviews, contact providers.</p>
+        </div>
+        <div style="background: #f8fafc; padding: 1rem; border-radius: var(--radius-md); border-left: 3px solid var(--success);">
+          <strong style="color: #0f172a;">Service Provider</strong>
+          <p style="font-size: 0.8125rem; color: #64748b; margin-top: 0.25rem;">Manage hostel, mess, and library listings, view student inquiries, track view counts.</p>
+        </div>
+        <div style="background: #f8fafc; padding: 1rem; border-radius: var(--radius-md); border-left: 3px solid var(--secondary);">
+          <strong style="color: #0f172a;">Administrator</strong>
+          <p style="font-size: 0.8125rem; color: #64748b; margin-top: 0.25rem;">Verify providers, approve/reject listings, moderate student reviews, monitor platform metrics.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Main Functional Modules -->
+    <div class="info-card">
+      <h3>5. MAIN FUNCTIONAL MODULES</h3>
+      <ul style="padding-left: 1.5rem; color: #334155; line-height: 1.8;">
+        <li><strong>Authentication Module:</strong> Student and provider registration and login.</li>
+        <li><strong>Accommodation Module:</strong> Hostel, PG, and rental room listings with details and pricing.</li>
+        <li><strong>Mess Services Module:</strong> Display of mess facilities, menus, timings, and charges.</li>
+        <li><strong>Private Library Module:</strong> Library search, membership information, and operating hours.</li>
+        <li><strong>Search & Filter Module:</strong> Search services based on location, budget, and preferences.</li>
+        <li><strong>Feedback Module:</strong> Ratings and reviews for all listed services.</li>
+        <li><strong>Admin Module:</strong> Verification of providers, management of listings, and moderation of reviews.</li>
+      </ul>
+    </div>
+
+    <!-- 6. Technical Specifications -->
+    <div class="info-card">
+      <h3>6. TECHNICAL SPECIFICATIONS</h3>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <div>
+          <h4 style="font-size: 0.9375rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">Hardware Requirements</h4>
+          <ul style="padding-left: 1.25rem; color: #475569; font-size: 0.875rem; line-height: 1.6;">
+            <li>Intel i3 Processor or Higher</li>
+            <li>4 GB RAM</li>
+            <li>500 MB Free Storage</li>
+          </ul>
+        </div>
+        <div>
+          <h4 style="font-size: 0.9375rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">Software Requirements & Tech Stack</h4>
+          <ul style="padding-left: 1.25rem; color: #475569; font-size: 0.875rem; line-height: 1.6;">
+            <li><strong>Frontend:</strong> HTML5, CSS3, JavaScript</li>
+            <li><strong>Backend:</strong> Python (Flask Framework)</li>
+            <li><strong>Database:</strong> MySQL / SQLite Dual Engine</li>
+            <li><strong>IDE:</strong> Visual Studio Code (VS Code)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. Key Advantages & Conclusion -->
+    <div class="info-card">
+      <h3>7. KEY ADVANTAGES & CONCLUSION</h3>
+      <ul style="padding-left: 1.5rem; color: #334155; line-height: 1.8; margin-bottom: 1rem;">
+        <li>Centralized platform for comprehensive student needs.</li>
+        <li>Verified and reliable service information through admin gatekeeping.</li>
+        <li>Easy search and multi-facet filtering options.</li>
+        <li>Time-saving, zero-brokerage, and convenient.</li>
+        <li>Improved transparency through verified student reviews.</li>
+        <li>Better accessibility for students relocating to new college cities.</li>
+      </ul>
+      <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: var(--radius-md); padding: 1rem; color: #065f46; font-size: 0.875rem;">
+        <strong>Project Outcome:</strong> A fully functional website developed using HTML, CSS, JavaScript, Python, and MySQL that provides students with quick access to verified services and improves their overall experience while relocating for education.
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
