@@ -1006,3 +1006,69 @@ img {
   .footer-grid { grid-template-columns: 1fr; }
   .hero-title { font-size: 2rem; }
 }
+
+/* Updated Student Resources Management System branding */
+.brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    text-decoration: none;
+}
+
+.brand-text {
+    min-width: 0;
+}
+
+.brand-name {
+    font-size: 1.35rem;
+    font-weight: 800;
+    line-height: 1.2;
+    color: #0f172a;
+    white-space: nowrap;
+}
+
+.brand-subtext {
+    display: block;
+    margin-top: 5px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    line-height: 1.3;
+    white-space: nowrap;
+}
+
+/* Mobile layout */
+@media (max-width: 768px) {
+    .navbar .container.nav-wrapper {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 12px;
+        padding-top: 12px;
+        padding-bottom: 12px;
+    }
+
+    .navbar .brand-logo {
+        flex: 1 1 100%;
+    }
+
+    .navbar .nav-actions {
+        display: flex;
+        gap: 10px;
+        margin-left: auto;
+    }
+
+    .navbar .nav-links {
+        display: none;
+    }
+
+    .brand-name {
+        font-size: 1.2rem;
+    }
+
+    .brand-subtext {
+        font-size: 0.75rem;
+    }
+}
+
