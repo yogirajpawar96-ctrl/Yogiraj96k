@@ -6,11 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>{% block title %}Student Resources Management System{% endblock %}</title>
-
-  <meta name="description" content="Student Resources Management System — find hostels, PGs, mess facilities and libraries in one place.">
+  <meta name="description" content="Find student hostels, PGs, mess facilities and libraries in one place.">
 
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -29,160 +27,100 @@
       </div>
 
       <div class="top-notice-links">
-        <span>
-          Submitted by:
-          <strong>Yogiraj Pawar</strong> &
-          <strong>Onkar Shinde</strong>
-        </span>
-
+        <span>Submitted by: <strong>Yogiraj Pawar</strong> &amp; <strong>Onkar Shinde</strong></span>
         <a href="{{ url_for('about') }}">About Project</a>
-
-        <a href="#quickDemoModal"
-           data-open-modal="quickDemoModal"
-           style="color:#38bdf8;font-weight:600;">
+        <a href="#quickDemoModal" data-open-modal="quickDemoModal" style="color:#38bdf8;font-weight:600;">
           ⚡ Quick Demo Login
         </a>
       </div>
     </div>
   </header>
 
-  <!-- Navigation Bar -->
+  <!-- Navigation -->
   <nav class="navbar">
     <div class="container nav-wrapper">
 
-      <!-- Updated Website Name -->
       <a href="{{ url_for('index') }}"
          class="brand-logo"
          aria-label="Student Resources Management System Home">
-
         <div class="brand-icon">🎓</div>
-
         <div>
           <div>Student Resources</div>
           <span class="brand-subtext">Management System</span>
         </div>
-
       </a>
 
       <ul class="nav-links">
         <li>
           <a href="{{ url_for('index') }}"
-             class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">
-            Home
-          </a>
+             class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">Home</a>
         </li>
-
         <li>
           <a href="{{ url_for('search') }}"
-             class="nav-link {% if request.endpoint == 'search' and not request.args.get('category') %}active{% endif %}">
-            Browse All
-          </a>
+             class="nav-link {% if request.endpoint == 'search' and not request.args.get('category') %}active{% endif %}">Browse All</a>
         </li>
-
         <li>
           <a href="{{ url_for('search', category='accommodation') }}"
-             class="nav-link {% if request.args.get('category') == 'accommodation' %}active{% endif %}">
-            🏠 Hostels & PGs
-          </a>
+             class="nav-link {% if request.args.get('category') == 'accommodation' %}active{% endif %}">🏠 Hostels &amp; PGs</a>
         </li>
-
         <li>
           <a href="{{ url_for('search', category='mess') }}"
-             class="nav-link {% if request.args.get('category') == 'mess' %}active{% endif %}">
-            🍲 Mess & Food
-          </a>
+             class="nav-link {% if request.args.get('category') == 'mess' %}active{% endif %}">🍲 Mess &amp; Food</a>
         </li>
-
         <li>
           <a href="{{ url_for('search', category='library') }}"
-             class="nav-link {% if request.args.get('category') == 'library' %}active{% endif %}">
-            📚 Libraries
-          </a>
+             class="nav-link {% if request.args.get('category') == 'library' %}active{% endif %}">📚 Libraries</a>
         </li>
-
         <li>
           <a href="{{ url_for('compare') }}"
-             class="nav-link {% if request.endpoint == 'compare' %}active{% endif %}">
-            ⚖️ Compare
-          </a>
+             class="nav-link {% if request.endpoint == 'compare' %}active{% endif %}">⚖️ Compare</a>
         </li>
       </ul>
 
       <!-- User Actions -->
       <div class="nav-actions">
-
         {% if current_user %}
 
           {% if current_user.role == 'student' %}
-
-            <a href="{{ url_for('student_dashboard') }}"
-               class="btn btn-outline btn-sm">
+            <a href="{{ url_for('student_dashboard') }}" class="btn btn-outline btn-sm">
               <span>👤 My Dashboard</span>
-
               {% if saved_count > 0 %}
-                <span class="status-pill status-approved"
-                      style="padding:0.1rem 0.4rem;font-size:0.7rem;">
+                <span class="status-pill status-approved" style="padding:0.1rem 0.4rem;font-size:0.7rem;">
                   {{ saved_count }} saved
                 </span>
               {% endif %}
             </a>
 
           {% elif current_user.role == 'provider' %}
-
-            <a href="{{ url_for('provider_dashboard') }}"
-               class="btn btn-outline btn-sm">
+            <a href="{{ url_for('provider_dashboard') }}" class="btn btn-outline btn-sm">
               <span>🏢 Provider Hub</span>
-
               {% if new_inquiries_count > 0 %}
-                <span class="status-pill status-new"
-                      style="padding:0.1rem 0.4rem;font-size:0.7rem;">
+                <span class="status-pill status-new" style="padding:0.1rem 0.4rem;font-size:0.7rem;">
                   {{ new_inquiries_count }} New
                 </span>
               {% endif %}
             </a>
-
-            <a href="{{ url_for('add_listing') }}"
-               class="btn btn-primary btn-sm">
-              + Add Listing
-            </a>
+            <a href="{{ url_for('add_listing') }}" class="btn btn-primary btn-sm">+ Add Listing</a>
 
           {% elif current_user.role == 'admin' %}
-
-            <a href="{{ url_for('admin_dashboard') }}"
-               class="btn btn-secondary btn-sm">
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary btn-sm">
               <span>🛡️ Admin Portal</span>
-
               {% if admin_pending_count > 0 %}
-                <span class="status-pill status-pending"
-                      style="padding:0.1rem 0.4rem;font-size:0.7rem;">
+                <span class="status-pill status-pending" style="padding:0.1rem 0.4rem;font-size:0.7rem;">
                   {{ admin_pending_count }} Pending
                 </span>
               {% endif %}
             </a>
-
           {% endif %}
 
-          <a href="{{ url_for('logout') }}"
-             class="btn btn-outline btn-sm"
-             title="Log Out">
-            Sign Out
-          </a>
+          <a href="{{ url_for('logout') }}" class="btn btn-outline btn-sm" title="Log Out">Sign Out</a>
 
         {% else %}
-
-          <a href="{{ url_for('login') }}"
-             class="btn btn-outline btn-sm">
-            Log In
-          </a>
-
-          <a href="{{ url_for('register_student') }}"
-             class="btn btn-primary btn-sm">
-            Sign Up
-          </a>
-
+          <a href="{{ url_for('login') }}" class="btn btn-outline btn-sm">Log In</a>
+          <a href="{{ url_for('register_student') }}" class="btn btn-primary btn-sm">Sign Up</a>
         {% endif %}
-
       </div>
+
     </div>
   </nav>
 
@@ -205,46 +143,24 @@
     {% block content %}{% endblock %}
   </main>
 
-  <!-- Floating Comparison Bar -->
+  <!-- Comparison Bar -->
   <div id="compare-floating-bar"
        style="display:none;position:fixed;bottom:1.5rem;left:50%;
        transform:translateX(-50%);background:#0f172a;color:#fff;
        padding:0.85rem 1.5rem;border-radius:9999px;
        box-shadow:0 10px 25px rgba(0,0,0,0.3);z-index:900;
-       align-items:center;gap:1rem;
-       border:1px solid rgba(255,255,255,0.15);">
-
-    <span>
-      Selected
-      <strong id="compare-count" style="color:#38bdf8;">0</strong>
-      items to compare
-    </span>
-
-    <a id="btn-go-compare"
-       href="{{ url_for('compare') }}"
-       class="btn btn-primary btn-sm btn-pill">
-      Compare Now
-    </a>
-
-    <button id="btn-clear-compare"
-            class="btn btn-outline btn-sm btn-pill"
-            style="color:#94a3b8;border-color:#334155;">
-      Clear
-    </button>
+       align-items:center;gap:1rem;border:1px solid rgba(255,255,255,0.15);">
+    <span>Selected <strong id="compare-count" style="color:#38bdf8;">0</strong> items to compare</span>
+    <a id="btn-go-compare" href="{{ url_for('compare') }}" class="btn btn-primary btn-sm btn-pill">Compare Now</a>
+    <button id="btn-clear-compare" class="btn btn-outline btn-sm btn-pill" style="color:#94a3b8;border-color:#334155;">Clear</button>
   </div>
 
   <!-- Quick Demo Login -->
   <div class="modal-overlay" id="quickDemoModal">
     <div class="modal-box">
-
       <div class="modal-header">
-        <h3 style="font-size:1.25rem;font-weight:700;color:#0f172a;">
-          ⚡ Quick Demo Login
-        </h3>
-
-        <button class="modal-close-btn" data-close-modal>
-          &times;
-        </button>
+        <h3 style="font-size:1.25rem;font-weight:700;color:#0f172a;">⚡ Quick Demo Login</h3>
+        <button class="modal-close-btn" data-close-modal>&times;</button>
       </div>
 
       <p style="font-size:0.875rem;color:#64748b;margin-bottom:1.5rem;">
@@ -253,51 +169,27 @@
 
       <div style="display:flex;flex-direction:column;gap:0.85rem;">
 
-        <a href="{{ url_for('quick_login', role='student') }}"
-           class="btn btn-outline"
-           style="justify-content:flex-start;padding:1rem;text-align:left;">
-
+        <a href="{{ url_for('quick_login', role='student') }}" class="btn btn-outline" style="justify-content:flex-start;padding:1rem;text-align:left;">
           <div style="font-size:1.5rem;margin-right:0.5rem;">🎓</div>
-
           <div>
-            <div style="font-weight:700;color:#1e3a8a;">
-              Student Account: Yogiraj Pawar
-            </div>
-            <div style="font-size:0.75rem;color:#64748b;">
-              Browse listings, submit reviews and save bookmarks.
-            </div>
+            <div style="font-weight:700;color:#1e3a8a;">Student Account: Yogiraj Pawar</div>
+            <div style="font-size:0.75rem;color:#64748b;">Browse listings, submit reviews and save bookmarks.</div>
           </div>
         </a>
 
-        <a href="{{ url_for('quick_login', role='provider') }}"
-           class="btn btn-outline"
-           style="justify-content:flex-start;padding:1rem;text-align:left;">
-
+        <a href="{{ url_for('quick_login', role='provider') }}" class="btn btn-outline" style="justify-content:flex-start;padding:1rem;text-align:left;">
           <div style="font-size:1.5rem;margin-right:0.5rem;">🏢</div>
-
           <div>
-            <div style="font-weight:700;color:#065f46;">
-              Service Provider: Ramesh Sharma
-            </div>
-            <div style="font-size:0.75rem;color:#64748b;">
-              Manage facility listings and student inquiries.
-            </div>
+            <div style="font-weight:700;color:#065f46;">Service Provider: Ramesh Sharma</div>
+            <div style="font-size:0.75rem;color:#64748b;">Manage facility listings and student inquiries.</div>
           </div>
         </a>
 
-        <a href="{{ url_for('quick_login', role='admin') }}"
-           class="btn btn-outline"
-           style="justify-content:flex-start;padding:1rem;text-align:left;">
-
+        <a href="{{ url_for('quick_login', role='admin') }}" class="btn btn-outline" style="justify-content:flex-start;padding:1rem;text-align:left;">
           <div style="font-size:1.5rem;margin-right:0.5rem;">🛡️</div>
-
           <div>
-            <div style="font-weight:700;color:#7c2d12;">
-              Administrator: Head Admin
-            </div>
-            <div style="font-size:0.75rem;color:#64748b;">
-              Manage approvals, providers and student feedback.
-            </div>
+            <div style="font-weight:700;color:#7c2d12;">Administrator: Head Admin</div>
+            <div style="font-size:0.75rem;color:#64748b;">Manage approvals, providers and student feedback.</div>
           </div>
         </a>
 
@@ -310,29 +202,71 @@
     <div class="container footer-grid">
 
       <div>
-        <div class="brand-logo"
-             style="color:#fff;margin-bottom:1rem;">
-
+        <div class="brand-logo" style="color:#fff;margin-bottom:1rem;">
           <div class="brand-icon">🎓</div>
-
           <div>Student Resources Management System</div>
         </div>
 
         <p style="font-size:0.875rem;color:#94a3b8;line-height:1.6;margin-bottom:1rem;">
-          A centralized digital platform connecting college students with
-          hostels, PGs, mess facilities and private libraries.
+          A centralized digital platform connecting college students with hostels, PGs, mess facilities and private libraries.
         </p>
 
         <div style="font-size:0.8125rem;color:#cbd5e1;">
-          <strong>College:</strong>
-          Commerce Management and Computer Science College
+          <strong>College:</strong> Commerce Management and Computer Science College
         </div>
       </div>
 
       <div>
         <h4 class="footer-heading">Services</h4>
-        <ul class="footer-links>
-          <li><a href="{{ url_for('search', category='accommodation') }}">Hostels & PGs</a></li>
+        <ul class="footer-links">
+          <li><a href="{{ url_for('search', category='accommodation') }}">Hostels &amp; PGs</a></li>
+          <li><a href="{{ url_for('search', category='mess') }}">Mess &amp; Dining</a></li>
+          <li><a href="{{ url_for('search', category='library') }}">Private Study Libraries</a></li>
+          <li><a href="{{ url_for('compare') }}">Compare Services</a></li>
+          <li><a href="{{ url_for('search') }}">Advanced Search</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="footer-heading">Portals</h4>
+        <ul class="footer-links">
+          <li><a href="{{ url_for('student_dashboard') }}">Student Dashboard</a></li>
+          <li><a href="{{ url_for('provider_dashboard') }}">Service Provider Hub</a></li>
+          <li><a href="{{ url_for('admin_dashboard') }}">Admin Verification Console</a></li>
+          <li><a href="{{ url_for('register_provider') }}">List Your Facility</a></li>
+          <li><a href="{{ url_for('about') }}">Project Synopsis</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="footer-heading">Academic Project</h4>
+        <p style="font-size:0.8125rem;color:#94a3b8;margin-bottom:0.5rem;">
+          <strong>Academic Year:</strong> 2026–2027
+        </p>
+        <p style="font-size:0.8125rem;color:#94a3b8;margin-bottom:0.5rem;">
+          <strong>Project Team:</strong><br>
+          1. Yogiraj Pawar<br>
+          2. Onkar Shinde
+        </p>
+        <p style="font-size:0.8125rem;color:#94a3b8;">
+          <strong>Tech Stack:</strong> Python, Flask, MySQL / SQLite, HTML5, CSS3, JavaScript.
+        </p>
+      </div>
+
+    </div>
+
+    <div class="container footer-bottom">
+      <div>&copy; 2026–2027 Student Resources Management System. All rights reserved.</div>
+      <div>Designed &amp; Developed for CMCS College Project Submission</div>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block scripts %}{% endblock %}
+
+</body>
+</html>
+ccommodation') }}">Hostels & PGs</a></li>
           <li><a href="{{ url_for('search', category='mess') }}">Mess & Dining</a></li>
           <li><a href="{{ url_for('search', category='library') }}">Private Study Libraries</a></li>
           <li><a href="{{ url_for('compare') }}">Compare Services</a></li>
