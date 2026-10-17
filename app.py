@@ -1,15 +1,19 @@
+```python
+import os
+import sqlite3
+from functools import wraps
+from html import escape
+
 from flask import (
     Flask, request, redirect, url_for,
     session, render_template_string, flash
 )
-import sqlite3
-import os
-from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "change-this-secret-key")
-DATABASE = "student_resources.db"
+
+DATABASE = os.path.join(os.path.dirname(__file__), "student_resources.db")
 
 
 # ---------------- DATABASE ----------------
@@ -52,38 +56,30 @@ def init_db():
     if count == 0:
         resources = [
             (
-                "Affordable Student Mess",
-                "Mess",
-                "Healthy and affordable meals for college students.",
-                "Near College Campus",
-                "₹2500/month",
+                "Affordable Student Mess", "Mess",
+                "Affordable meals for college students.",
+                "Near College Campus", "₹2500/month",
                 "mess@example.com",
                 "https://images.unsplash.com/photo-1547592180-85f173990554"
             ),
             (
-                "Student Boys Hostel",
-                "Hostel",
-                "Comfortable hostel accommodation for students.",
-                "College Road",
-                "₹5000/month",
+                "Student Boys Hostel", "Hostel",
+                "Comfortable accommodation for students.",
+                "College Road", "₹5000/month",
                 "hostel@example.com",
                 "https://images.unsplash.com/photo-1555854877-bab0e564b8d5"
             ),
             (
-                "Budget Rental Room",
-                "Rental Room",
+                "Budget Rental Room", "Rental Room",
                 "Affordable rental room for students.",
-                "Near Bus Stand",
-                "₹3500/month",
+                "Near Bus Stand", "₹3500/month",
                 "rooms@example.com",
                 "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267"
             ),
             (
-                "College Study Library",
-                "Library",
+                "College Study Library", "Library",
                 "Quiet study space with books and reading facilities.",
-                "Main Market",
-                "₹500/month",
+                "Main Market", "₹500/month",
                 "library@example.com",
                 "https://images.unsplash.com/photo-1507842217343-583bb7270b66"
             )
@@ -99,19 +95,19 @@ def init_db():
     conn.close()
 
 
-# ---------------- LOGIN REQUIRED ----------------
+# ---------------- AUTHENTICATION ----------------
 
 def login_required(function):
     @wraps(function)
     def wrapper(*args, **kwargs):
         if "user_id" not in session:
-            flash("Please log in to access the website.", "error")
+            flash("Please log in to view resources.", "error")
             return redirect(url_for("login"))
         return function(*args, **kwargs)
     return wrapper
 
 
-# ---------------- HTML DESIGN ----------------
+# ---------------- DESIGN ----------------
 
 BASE = """
 <!DOCTYPE html>
@@ -122,9 +118,7 @@ BASE = """
 <title>{{ title }} | Student Resources Management System</title>
 
 <style>
-* {
-    box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
     margin: 0;
@@ -138,22 +132,15 @@ header {
     color: white;
     padding: 18px 6%;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 14px;
 }
 
-header h2 {
-    margin: 0;
-    font-size: 22px;
-}
+header h2 { margin: 0; font-size: 22px; }
 
-nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-}
+nav { display: flex; flex-wrap: wrap; gap: 16px; }
 
 nav a {
     color: white;
@@ -161,9 +148,7 @@ nav a {
     font-weight: bold;
 }
 
-nav a:hover {
-    text-decoration: underline;
-}
+nav a:hover { text-decoration: underline; }
 
 .container {
     width: 90%;
@@ -180,24 +165,18 @@ nav a:hover {
     margin-bottom: 30px;
 }
 
-.hero h1 {
-    margin-top: 0;
-    font-size: 32px;
-}
+.hero h1 { font-size: 32px; margin-top: 0; }
 
-.hero p {
-    font-size: 17px;
-}
-
-.search-box {
+.search-box, .details, .form-card {
     background: white;
-    padding: 20px;
+    padding: 24px;
     border-radius: 12px;
-    margin-bottom: 30px;
-    box-shadow: 0 3px 12px #0000000d;
+    box-shadow: 0 3px 14px #00000010;
 }
 
-input, select, textarea {
+.search-box { margin-bottom: 30px; }
+
+input, select {
     width: 100%;
     padding: 12px;
     margin: 8px 0 15px;
@@ -218,9 +197,7 @@ button, .btn {
     font-size: 15px;
 }
 
-button:hover, .btn:hover {
-    background: #106b38;
-}
+button:hover, .btn:hover { background: #106b38; }
 
 .grid {
     display: grid;
@@ -233,11 +210,6 @@ button:hover, .btn:hover {
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 4px 14px #00000010;
-    transition: transform 0.2s;
-}
-
-.card:hover {
-    transform: translateY(-4px);
 }
 
 .card img {
@@ -247,14 +219,9 @@ button:hover, .btn:hover {
     background: #dce9df;
 }
 
-.card-body {
-    padding: 18px;
-}
+.card-body { padding: 18px; }
 
-.card h3 {
-    margin-top: 0;
-    color: #168447;
-}
+.card h3 { color: #168447; margin-top: 10px; }
 
 .category {
     display: inline-block;
@@ -265,24 +232,11 @@ button:hover, .btn:hover {
     font-size: 13px;
 }
 
-.price {
-    font-weight: bold;
-    color: #168447;
-}
+.price { font-weight: bold; color: #168447; }
 
-.form-card {
-    background: white;
-    padding: 28px;
-    border-radius: 12px;
-    max-width: 450px;
-    margin: 35px auto;
-    box-shadow: 0 4px 18px #00000012;
-}
+.form-card { max-width: 450px; margin: 35px auto; }
 
-.form-card h1 {
-    text-align: center;
-    color: #168447;
-}
+.form-card h1 { text-align: center; color: #168447; }
 
 .message {
     background: #e4f5e9;
@@ -292,17 +246,7 @@ button:hover, .btn:hover {
     margin-bottom: 15px;
 }
 
-.error {
-    background: #fde8e8;
-    color: #a12020;
-}
-
-.details {
-    background: white;
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px #00000010;
-}
+.error { background: #fde8e8; color: #a12020; }
 
 .details img {
     width: 100%;
@@ -316,25 +260,13 @@ footer {
     padding: 22px;
     text-align: center;
     background: #e4eee7;
-    color: #42564a;
 }
 
 @media (max-width: 600px) {
-    header {
-        padding: 16px 5%;
-    }
-
-    header h2 {
-        font-size: 18px;
-    }
-
-    .hero h1 {
-        font-size: 25px;
-    }
-
-    .container {
-        width: 92%;
-    }
+    header { padding: 16px 5%; }
+    header h2 { font-size: 18px; }
+    .hero h1 { font-size: 25px; }
+    .container { width: 92%; }
 }
 </style>
 </head>
@@ -343,14 +275,14 @@ footer {
 <header>
     <h2>Student Resources</h2>
     <nav>
-        {% if user_name %}
-            <a href="{{ url_for('home') }}">Home</a>
-            <a href="{{ url_for('search') }}">Find Resources</a>
-            <a href="{{ url_for('logout') }}">Logout</a>
-        {% else %}
-            <a href="{{ url_for('login') }}">Login</a>
-            <a href="{{ url_for('register') }}">Register</a>
-        {% endif %}
+    {% if user_name %}
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('search') }}">Find Resources</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    {% else %}
+        <a href="{{ url_for('login') }}">Login</a>
+        <a href="{{ url_for('register') }}">Register</a>
+    {% endif %}
     </nav>
 </header>
 
@@ -360,13 +292,10 @@ footer {
             {{ message }}
         </div>
     {% endfor %}
-
     {{ content|safe }}
 </div>
 
-<footer>
-    Student Resources Management System &copy; 2026
-</footer>
+<footer>Student Resources Management System &copy; 2026</footer>
 </body>
 </html>
 """
@@ -394,9 +323,9 @@ def register():
         password = request.form.get("password", "")
 
         if not name or not email or not password:
-            flash("Please fill in all fields.", "error")
+            flash("Please complete all fields.", "error")
         elif len(password) < 6:
-            flash("Password must contain at least 6 characters.", "error")
+            flash("Password must be at least 6 characters.", "error")
         else:
             conn = get_db()
             try:
@@ -421,22 +350,17 @@ def register():
         <h1>Create Account</h1>
         <form method="POST">
             <label>Full Name</label>
-            <input type="text" name="name" required>
+            <input name="name" required maxlength="100">
 
             <label>Email Address</label>
-            <input type="email" name="email" required>
+            <input type="email" name="email" required maxlength="254">
 
-            <label>Password</label>
-            <input type="password" name="password"
-                   minlength="6" required>
+            <label>Password (minimum 6 characters)</label>
+            <input type="password" name="password" minlength="6" required>
 
-            <button type="submit" style="width:100%">
-                Register
-            </button>
+            <button type="submit" style="width:100%">Register</button>
         </form>
-        <p>Already registered?
-           <a href="/login">Login here</a>
-        </p>
+        <p>Already registered? <a href="/login">Login here</a></p>
     </div>
     """
     return page("Register", content)
@@ -455,8 +379,7 @@ def login():
 
         conn = get_db()
         user = conn.execute(
-            "SELECT * FROM users WHERE email = ?",
-            (email,)
+            "SELECT * FROM users WHERE email = ?", (email,)
         ).fetchone()
         conn.close()
 
@@ -471,10 +394,7 @@ def login():
     content = """
     <div class="form-card">
         <h1>Welcome Back</h1>
-        <p style="text-align:center">
-            Login to explore student resources.
-        </p>
-
+        <p style="text-align:center">Log in to explore student resources.</p>
         <form method="POST">
             <label>Email Address</label>
             <input type="email" name="email" required>
@@ -482,14 +402,9 @@ def login():
             <label>Password</label>
             <input type="password" name="password" required>
 
-            <button type="submit" style="width:100%">
-                Login
-            </button>
+            <button type="submit" style="width:100%">Login</button>
         </form>
-
-        <p>Don't have an account?
-           <a href="/register">Register here</a>
-        </p>
+        <p>Don't have an account? <a href="/register">Register here</a></p>
     </div>
     """
     return page("Login", content)
@@ -509,47 +424,46 @@ def home():
     cards = ""
 
     for r in resources:
+        image = escape(r["image"] or "", quote=True)
+        name = escape(r["name"])
+        category = escape(r["category"])
+        location = escape(r["location"])
+        price = escape(r["price"])
+
         cards += f"""
         <div class="card">
-            <img src="{r['image'] or ''}" alt="Resource image"
+            <img src="{image}" alt="Resource image"
                  onerror="this.style.display='none'">
             <div class="card-body">
-                <span class="category">{r['category']}</span>
-                <h3>{r['name']}</h3>
-                <p>{r['location']}</p>
-                <p class="price">{r['price']}</p>
-                <a class="btn" href="/resource/{r['id']}">
-                    View Details
-                </a>
+                <span class="category">{category}</span>
+                <h3>{name}</h3>
+                <p>{location}</p>
+                <p class="price">{price}</p>
+                <a class="btn" href="/resource/{r['id']}">View Details</a>
             </div>
         </div>
         """
 
     content = f"""
     <section class="hero">
-        <h1>Welcome to Student Resources Management System</h1>
-        <p>Hello, {session['user_name']}!</p>
+        <h1>Student Resources Management System</h1>
+        <p>Welcome, {escape(session.get('user_name', 'Student'))}!</p>
         <p>Find affordable mess, hostels, rental rooms and libraries.</p>
         <a class="btn" href="/search"
-           style="background:white;color:#168447">
-           Explore Resources
-        </a>
+           style="background:white;color:#168447">Explore Resources</a>
     </section>
 
     <div class="search-box">
         <h2>Find Student Resources</h2>
         <form action="/search" method="GET">
-            <input type="text" name="keyword"
-                   placeholder="Search resources or locations">
-
+            <input name="keyword" placeholder="Search resources or locations">
             <select name="category">
                 <option value="">All Categories</option>
-                <option value="Mess">Mess</option>
-                <option value="Hostel">Hostel</option>
-                <option value="Rental Room">Rental Room</option>
-                <option value="Library">Library</option>
+                <option>Mess</option>
+                <option>Hostel</option>
+                <option>Rental Room</option>
+                <option>Library</option>
             </select>
-
             <button type="submit">Search</button>
         </form>
     </div>
@@ -557,7 +471,6 @@ def home():
     <h2>Available Resources</h2>
     <div class="grid">{cards}</div>
     """
-
     return page("Home", content)
 
 
@@ -570,17 +483,12 @@ def search():
     category = request.args.get("category", "").strip()
 
     conn = get_db()
-
     query = "SELECT * FROM resources WHERE 1=1"
     params = []
 
     if keyword:
         query += """
-            AND (
-                name LIKE ? OR
-                description LIKE ? OR
-                location LIKE ?
-            )
+            AND (name LIKE ? OR description LIKE ? OR location LIKE ?)
         """
         pattern = f"%{keyword}%"
         params.extend([pattern, pattern, pattern])
@@ -590,25 +498,28 @@ def search():
         params.append(category)
 
     query += " ORDER BY id DESC"
-
     resources = conn.execute(query, params).fetchall()
     conn.close()
 
     cards = ""
 
     for r in resources:
+        image = escape(r["image"] or "", quote=True)
+        name = escape(r["name"])
+        cat = escape(r["category"])
+        location = escape(r["location"])
+        price = escape(r["price"])
+
         cards += f"""
         <div class="card">
-            <img src="{r['image'] or ''}" alt="Resource image"
+            <img src="{image}" alt="Resource image"
                  onerror="this.style.display='none'">
             <div class="card-body">
-                <span class="category">{r['category']}</span>
-                <h3>{r['name']}</h3>
-                <p>{r['location']}</p>
-                <p class="price">{r['price']}</p>
-                <a class="btn" href="/resource/{r['id']}">
-                    View Details
-                </a>
+                <span class="category">{cat}</span>
+                <h3>{name}</h3>
+                <p>{location}</p>
+                <p class="price">{price}</p>
+                <a class="btn" href="/resource/{r['id']}">View Details</a>
             </div>
         </div>
         """
@@ -616,45 +527,36 @@ def search():
     if not cards:
         cards = "<p>No resources found. Try another search.</p>"
 
+    selected = {
+        item: ("selected" if category == item else "")
+        for item in ["Mess", "Hostel", "Rental Room", "Library"]
+    }
+
     content = f"""
     <h1>Search Resources</h1>
-
     <div class="search-box">
         <form method="GET">
             <label>Keyword</label>
-            <input type="text" name="keyword"
-                   value="{keyword}"
+            <input name="keyword" value="{escape(keyword, quote=True)}"
                    placeholder="Enter resource or location">
 
             <label>Category</label>
             <select name="category">
                 <option value="">All Categories</option>
-                <option value="Mess"
-                    {"selected" if category == "Mess" else ""}>
-                    Mess
-                </option>
-                <option value="Hostel"
-                    {"selected" if category == "Hostel" else ""}>
-                    Hostel
-                </option>
-                <option value="Rental Room"
-                    {"selected" if category == "Rental Room" else ""}>
+                <option value="Mess" {selected['Mess']}>Mess</option>
+                <option value="Hostel" {selected['Hostel']}>Hostel</option>
+                <option value="Rental Room" {selected['Rental Room']}>
                     Rental Room
                 </option>
-                <option value="Library"
-                    {"selected" if category == "Library" else ""}>
-                    Library
-                </option>
+                <option value="Library" {selected['Library']}>Library</option>
             </select>
 
             <button type="submit">Search</button>
             <a class="btn" href="/search">Clear</a>
         </form>
     </div>
-
     <div class="grid">{cards}</div>
     """
-
     return page("Search Resources", content)
 
 
@@ -665,44 +567,38 @@ def search():
 def resource_detail(resource_id):
     conn = get_db()
     resource = conn.execute(
-        "SELECT * FROM resources WHERE id = ?",
-        (resource_id,)
+        "SELECT * FROM resources WHERE id = ?", (resource_id,)
     ).fetchone()
     conn.close()
 
     if resource is None:
         return page(
             "Not Found",
-            "<h2>Resource not found.</h2><a href='/'>Go Home</a>"
+            "<h2>Resource not found.</h2><a class='btn' href='/'>Go Home</a>"
         ), 404
 
-    image = resource["image"] or ""
+    name = escape(resource["name"])
+    category = escape(resource["category"])
+    description = escape(resource["description"])
+    location = escape(resource["location"])
+    price = escape(resource["price"])
+    contact = escape(resource["contact"])
+    image = escape(resource["image"] or "", quote=True)
 
     content = f"""
     <div class="details">
         <img src="{image}" alt="Resource image"
              onerror="this.style.display='none'">
-
-        <h1>{resource['name']}</h1>
-        <span class="category">{resource['category']}</span>
-
-        <p><strong>Description:</strong>
-           {resource['description']}</p>
-
-        <p><strong>Location:</strong>
-           {resource['location']}</p>
-
-        <p><strong>Price:</strong>
-           <span class="price">{resource['price']}</span></p>
-
-        <p><strong>Contact:</strong>
-           {resource['contact']}</p>
-
+        <h1>{name}</h1>
+        <span class="category">{category}</span>
+        <p><strong>Description:</strong> {description}</p>
+        <p><strong>Location:</strong> {location}</p>
+        <p><strong>Price:</strong> <span class="price">{price}</span></p>
+        <p><strong>Contact:</strong> {contact}</p>
         <a class="btn" href="/search">Back to Search</a>
         <a class="btn" href="/">Home</a>
     </div>
     """
-
     return page("Resource Details", content)
 
 
@@ -711,13 +607,15 @@ def resource_detail(resource_id):
 @app.route("/logout")
 def logout():
     session.clear()
-    flash("You have been logged out successfully.")
+    flash("You have been logged out.")
     return redirect(url_for("login"))
 
 
-# ---------------- RUN APP ----------------
+# ---------------- START APPLICATION ----------------
+
+# Create database tables and sample resources when the app starts.
+init_db()
 
 if __name__ == "__main__":
-    init_db()
     app.run(debug=True)
 ```
