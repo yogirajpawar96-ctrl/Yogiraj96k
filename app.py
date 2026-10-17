@@ -1,620 +1,240 @@
 import os
-import sqlite3
 from functools import wraps
-from html import escape
-
-from flask import (
-    Flask, request, redirect, url_for,
-    session, render_template_string, flash
-)
+from flask import Flask, render_template, request, redirect, url_for, flash, session, abort, jsonify
+from flask_wtf.csrf import CSRFProtect
+from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import generate_password_hash, check_password_hash
+import mysql.connector
+from mysql.connector import Error
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "change-this-secret-key")
-
-DATABASE = os.path.join(os.path.dirname(__file__), "student_resources.db")
-
-
-# ---------------- DATABASE ----------------
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+if not app.config["SECRET_KEY"]:
+    raise RuntimeError("Set SECRET_KEY in the environment before starting the application.")
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = os.getenv("COOKIE_SECURE", "true").lower() == "true"
+app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+csrf = CSRFProtect(app)
 
 def get_db():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
-def init_db():
-    conn = get_db()
-
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL
-        )
-    """)
-
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS resources (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            category TEXT NOT NULL,
-            description TEXT NOT NULL,
-            location TEXT NOT NULL,
-            price TEXT NOT NULL,
-            contact TEXT NOT NULL,
-            image TEXT
-        )
-    """)
-
-    count = conn.execute(
-        "SELECT COUNT(*) FROM resources"
-    ).fetchone()[0]
-
-    if count == 0:
-        resources = [
-            (
-                "Affordable Student Mess", "Mess",
-                "Affordable meals for college students.",
-                "Near College Campus", "₹2500/month",
-                "mess@example.com",
-                "https://images.unsplash.com/photo-1547592180-85f173990554"
-            ),
-            (
-                "Student Boys Hostel", "Hostel",
-                "Comfortable accommodation for students.",
-                "College Road", "₹5000/month",
-                "hostel@example.com",
-                "https://images.unsplash.com/photo-1555854877-bab0e564b8d5"
-            ),
-            (
-                "Budget Rental Room", "Rental Room",
-                "Affordable rental room for students.",
-                "Near Bus Stand", "₹3500/month",
-                "rooms@example.com",
-                "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267"
-            ),
-            (
-                "College Study Library", "Library",
-                "Quiet study space with books and reading facilities.",
-                "Main Market", "₹500/month",
-                "library@example.com",
-                "https://images.unsplash.com/photo-1507842217343-583bb7270b66"
-            )
-        ]
-
-        conn.executemany("""
-            INSERT INTO resources
-            (name, category, description, location, price, contact, image)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, resources)
-
-    conn.commit()
-    conn.close()
-
-
-# ---------------- AUTHENTICATION ----------------
-
-def login_required(function):
-    @wraps(function)
-    def wrapper(*args, **kwargs):
-        if "user_id" not in session:
-            flash("Please log in to view resources.", "error")
-            return redirect(url_for("login"))
-        return function(*args, **kwargs)
-    return wrapper
-
-
-# ---------------- DESIGN ----------------
-
-BASE = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ title }} | Student Resources Management System</title>
-
-<style>
-* { box-sizing: border-box; }
-
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #f4f8f5;
-    color: #26352b;
-}
-
-header {
-    background: #168447;
-    color: white;
-    padding: 18px 6%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 14px;
-}
-
-header h2 { margin: 0; font-size: 22px; }
-
-nav { display: flex; flex-wrap: wrap; gap: 16px; }
-
-nav a {
-    color: white;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-nav a:hover { text-decoration: underline; }
-
-.container {
-    width: 90%;
-    max-width: 1100px;
-    margin: 30px auto;
-}
-
-.hero {
-    background: linear-gradient(120deg, #168447, #36ad6a);
-    color: white;
-    padding: 45px 25px;
-    text-align: center;
-    border-radius: 14px;
-    margin-bottom: 30px;
-}
-
-.hero h1 { font-size: 32px; margin-top: 0; }
-
-.search-box, .details, .form-card {
-    background: white;
-    padding: 24px;
-    border-radius: 12px;
-    box-shadow: 0 3px 14px #00000010;
-}
-
-.search-box { margin-bottom: 30px; }
-
-input, select {
-    width: 100%;
-    padding: 12px;
-    margin: 8px 0 15px;
-    border: 1px solid #ccd8ce;
-    border-radius: 7px;
-    font-size: 15px;
-}
-
-button, .btn {
-    display: inline-block;
-    background: #168447;
-    color: white;
-    border: none;
-    border-radius: 7px;
-    padding: 12px 18px;
-    text-decoration: none;
-    cursor: pointer;
-    font-size: 15px;
-}
-
-button:hover, .btn:hover { background: #106b38; }
-
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-    gap: 22px;
-}
-
-.card {
-    background: white;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 14px #00000010;
-}
-
-.card img {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
-    background: #dce9df;
-}
-
-.card-body { padding: 18px; }
-
-.card h3 { color: #168447; margin-top: 10px; }
-
-.category {
-    display: inline-block;
-    background: #e0f4e7;
-    color: #126b37;
-    padding: 5px 10px;
-    border-radius: 20px;
-    font-size: 13px;
-}
-
-.price { font-weight: bold; color: #168447; }
-
-.form-card { max-width: 450px; margin: 35px auto; }
-
-.form-card h1 { text-align: center; color: #168447; }
-
-.message {
-    background: #e4f5e9;
-    color: #126b37;
-    padding: 12px;
-    border-radius: 7px;
-    margin-bottom: 15px;
-}
-
-.error { background: #fde8e8; color: #a12020; }
-
-.details img {
-    width: 100%;
-    max-height: 350px;
-    object-fit: cover;
-    border-radius: 10px;
-}
-
-footer {
-    margin-top: 45px;
-    padding: 22px;
-    text-align: center;
-    background: #e4eee7;
-}
-
-@media (max-width: 600px) {
-    header { padding: 16px 5%; }
-    header h2 { font-size: 18px; }
-    .hero h1 { font-size: 25px; }
-    .container { width: 92%; }
-}
-</style>
-</head>
-
-<body>
-<header>
-    <h2>Student Resources</h2>
-    <nav>
-    {% if user_name %}
-        <a href="{{ url_for('home') }}">Home</a>
-        <a href="{{ url_for('search') }}">Find Resources</a>
-        <a href="{{ url_for('logout') }}">Logout</a>
-    {% else %}
-        <a href="{{ url_for('login') }}">Login</a>
-        <a href="{{ url_for('register') }}">Register</a>
-    {% endif %}
-    </nav>
-</header>
-
-<div class="container">
-    {% for category, message in get_flashed_messages(with_categories=true) %}
-        <div class="message {% if category == 'error' %}error{% endif %}">
-            {{ message }}
-        </div>
-    {% endfor %}
-    {{ content|safe }}
-</div>
-
-<footer>Student Resources Management System &copy; 2026</footer>
-</body>
-</html>
-"""
-
-
-def page(title, content):
-    return render_template_string(
-        BASE,
-        title=title,
-        content=content,
-        user_name=session.get("user_name")
+    return mysql.connector.connect(
+        host=os.getenv("DB_HOST", "localhost"),
+        user=os.getenv("DB_USER", "root"),
+        password=os.getenv("DB_PASSWORD", ""),
+        database=os.getenv("DB_NAME", "student_resources")
     )
 
-
-# ---------------- REGISTER ----------------
-
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    if "user_id" in session:
-        return redirect(url_for("home"))
-
-    if request.method == "POST":
-        name = request.form.get("name", "").strip()
-        email = request.form.get("email", "").strip().lower()
-        password = request.form.get("password", "")
-
-        if not name or not email or not password:
-            flash("Please complete all fields.", "error")
-        elif len(password) < 6:
-            flash("Password must be at least 6 characters.", "error")
-        else:
-            conn = get_db()
-            try:
-                conn.execute("""
-                    INSERT INTO users (name, email, password)
-                    VALUES (?, ?, ?)
-                """, (
-                    name,
-                    email,
-                    generate_password_hash(password)
-                ))
-                conn.commit()
-                flash("Registration successful. Please log in.")
-                return redirect(url_for("login"))
-            except sqlite3.IntegrityError:
-                flash("This email is already registered.", "error")
-            finally:
-                conn.close()
-
-    content = """
-    <div class="form-card">
-        <h1>Create Account</h1>
-        <form method="POST">
-            <label>Full Name</label>
-            <input name="name" required maxlength="100">
-
-            <label>Email Address</label>
-            <input type="email" name="email" required maxlength="254">
-
-            <label>Password (minimum 6 characters)</label>
-            <input type="password" name="password" minlength="6" required>
-
-            <button type="submit" style="width:100%">Register</button>
-        </form>
-        <p>Already registered? <a href="/login">Login here</a></p>
-    </div>
-    """
-    return page("Register", content)
-
-
-# ---------------- LOGIN ----------------
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if "user_id" in session:
-        return redirect(url_for("home"))
-
-    if request.method == "POST":
-        email = request.form.get("email", "").strip().lower()
-        password = request.form.get("password", "")
-
-        conn = get_db()
-        user = conn.execute(
-            "SELECT * FROM users WHERE email = ?", (email,)
-        ).fetchone()
+def query(sql, params=(), one=False, commit=False):
+    conn = get_db()
+    cur = conn.cursor(dictionary=True)
+    try:
+        cur.execute(sql, params)
+        if commit:
+            conn.commit()
+            return cur.lastrowid
+        return cur.fetchone() if one else cur.fetchall()
+    finally:
+        cur.close()
         conn.close()
 
-        if user and check_password_hash(user["password"], password):
-            session.clear()
-            session["user_id"] = user["id"]
-            session["user_name"] = user["name"]
-            return redirect(url_for("home"))
+def login_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        if not session.get("user_id"):
+            flash("Please log in to continue.", "warning")
+            return redirect(url_for("login"))
+        return fn(*args, **kwargs)
+    return wrapper
 
-        flash("Invalid email or password.", "error")
+def role_required(*roles):
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            if session.get("role") not in roles:
+                abort(403)
+            return fn(*args, **kwargs)
+        return wrapper
+    return decorator
 
-    content = """
-    <div class="form-card">
-        <h1>Welcome Back</h1>
-        <p style="text-align:center">Log in to explore student resources.</p>
-        <form method="POST">
-            <label>Email Address</label>
-            <input type="email" name="email" required>
+@app.after_request
+def add_security_headers(response):
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+    if request.is_secure:
+        response.headers.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+    return response
 
-            <label>Password</label>
-            <input type="password" name="password" required>
+@app.route("/health")
+def health():
+    try:
+        query("SELECT 1", one=True)
+        return jsonify(status="ok", database="connected"), 200
+    except Exception:
+        app.logger.exception("Health check failed")
+        return jsonify(status="error", database="unavailable"), 503
 
-            <button type="submit" style="width:100%">Login</button>
-        </form>
-        <p>Don't have an account? <a href="/register">Register here</a></p>
-    </div>
-    """
-    return page("Login", content)
-
-
-# ---------------- HOME ----------------
+@app.context_processor
+def common_data():
+    return {"current_user": session.get("name"), "current_role": session.get("role")}
 
 @app.route("/")
-@login_required
-def home():
-    conn = get_db()
-    resources = conn.execute(
-        "SELECT * FROM resources ORDER BY id DESC"
-    ).fetchall()
-    conn.close()
-
-    cards = ""
-
-    for r in resources:
-        image = escape(r["image"] or "", quote=True)
-        name = escape(r["name"])
-        category = escape(r["category"])
-        location = escape(r["location"])
-        price = escape(r["price"])
-
-        cards += f"""
-        <div class="card">
-            <img src="{image}" alt="Resource image"
-                 onerror="this.style.display='none'">
-            <div class="card-body">
-                <span class="category">{category}</span>
-                <h3>{name}</h3>
-                <p>{location}</p>
-                <p class="price">{price}</p>
-                <a class="btn" href="/resource/{r['id']}">View Details</a>
-            </div>
-        </div>
-        """
-
-    content = f"""
-    <section class="hero">
-        <h1>Student Resources Management System</h1>
-        <p>Welcome, {escape(session.get('user_name', 'Student'))}!</p>
-        <p>Find affordable mess, hostels, rental rooms and libraries.</p>
-        <a class="btn" href="/search"
-           style="background:white;color:#168447">Explore Resources</a>
-    </section>
-
-    <div class="search-box">
-        <h2>Find Student Resources</h2>
-        <form action="/search" method="GET">
-            <input name="keyword" placeholder="Search resources or locations">
-            <select name="category">
-                <option value="">All Categories</option>
-                <option>Mess</option>
-                <option>Hostel</option>
-                <option>Rental Room</option>
-                <option>Library</option>
-            </select>
-            <button type="submit">Search</button>
-        </form>
-    </div>
-
-    <h2>Available Resources</h2>
-    <div class="grid">{cards}</div>
-    """
-    return page("Home", content)
-
-
-# ---------------- SEARCH ----------------
-
-@app.route("/search")
-@login_required
-def search():
-    keyword = request.args.get("keyword", "").strip()
+def index():
     category = request.args.get("category", "").strip()
-
-    conn = get_db()
-    query = "SELECT * FROM resources WHERE 1=1"
+    location = request.args.get("location", "").strip()
+    max_price = request.args.get("max_price", "").strip()
+    search = request.args.get("q", "").strip()
+    sql = """SELECT l.*, u.name AS provider_name,
+             COALESCE((SELECT ROUND(AVG(r.rating),1) FROM reviews r WHERE r.listing_id=l.id),0) AS rating
+             FROM listings l JOIN users u ON u.id=l.provider_id WHERE l.status='approved'"""
     params = []
-
-    if keyword:
-        query += """
-            AND (name LIKE ? OR description LIKE ? OR location LIKE ?)
-        """
-        pattern = f"%{keyword}%"
-        params.extend([pattern, pattern, pattern])
-
     if category:
-        query += " AND category = ?"
-        params.append(category)
+        sql += " AND l.category=%s"; params.append(category)
+    if location:
+        sql += " AND l.location LIKE %s"; params.append("%"+location+"%")
+    if search:
+        sql += " AND (l.title LIKE %s OR l.description LIKE %s OR l.location LIKE %s)"
+        params.extend(["%"+search+"%"]*3)
+    if max_price:
+        try:
+            sql += " AND l.price <= %s"; params.append(float(max_price))
+        except ValueError:
+            pass
+    sql += " ORDER BY l.created_at DESC"
+    listings = query(sql, tuple(params))
+    return render_template("index.html", listings=listings, category=category, location=location, max_price=max_price, q=search)
 
-    query += " ORDER BY id DESC"
-    resources = conn.execute(query, params).fetchall()
-    conn.close()
+@app.route("/listing/<int:listing_id>")
+def listing_detail(listing_id):
+    listing = query("""SELECT l.*,u.name AS provider_name,u.phone AS provider_phone,
+        COALESCE((SELECT ROUND(AVG(r.rating),1) FROM reviews r WHERE r.listing_id=l.id),0) AS rating
+        FROM listings l JOIN users u ON u.id=l.provider_id
+        WHERE l.id=%s AND l.status='approved'""", (listing_id,), one=True)
+    if not listing: abort(404)
+    reviews = query("""SELECT r.*,u.name AS student_name FROM reviews r
+                       JOIN users u ON u.id=r.student_id WHERE r.listing_id=%s ORDER BY r.created_at DESC""", (listing_id,))
+    return render_template("listing_detail.html", listing=listing, reviews=reviews)
 
-    cards = ""
+@app.route("/register", methods=["GET","POST"])
+def register():
+    if request.method == "POST":
+        name=request.form.get("name","").strip()
+        email=request.form.get("email","").strip().lower()
+        phone=request.form.get("phone","").strip()
+        role=request.form.get("role","student")
+        password=request.form.get("password","")
+        if role not in ("student","provider"): role="student"
+        if not name or not email or len(password)<6:
+            flash("Enter your name and email, and use a password of at least 6 characters.", "danger")
+        elif query("SELECT id FROM users WHERE email=%s",(email,),one=True):
+            flash("An account with this email already exists.", "danger")
+        else:
+            query("INSERT INTO users(name,email,phone,password_hash,role) VALUES(%s,%s,%s,%s,%s)",
+                  (name,email,phone,generate_password_hash(password),role),commit=True)
+            flash("Registration successful. You can now log in.", "success")
+            return redirect(url_for("login"))
+    return render_template("register.html")
 
-    for r in resources:
-        image = escape(r["image"] or "", quote=True)
-        name = escape(r["name"])
-        cat = escape(r["category"])
-        location = escape(r["location"])
-        price = escape(r["price"])
-
-        cards += f"""
-        <div class="card">
-            <img src="{image}" alt="Resource image"
-                 onerror="this.style.display='none'">
-            <div class="card-body">
-                <span class="category">{cat}</span>
-                <h3>{name}</h3>
-                <p>{location}</p>
-                <p class="price">{price}</p>
-                <a class="btn" href="/resource/{r['id']}">View Details</a>
-            </div>
-        </div>
-        """
-
-    if not cards:
-        cards = "<p>No resources found. Try another search.</p>"
-
-    selected = {
-        item: ("selected" if category == item else "")
-        for item in ["Mess", "Hostel", "Rental Room", "Library"]
-    }
-
-    content = f"""
-    <h1>Search Resources</h1>
-    <div class="search-box">
-        <form method="GET">
-            <label>Keyword</label>
-            <input name="keyword" value="{escape(keyword, quote=True)}"
-                   placeholder="Enter resource or location">
-
-            <label>Category</label>
-            <select name="category">
-                <option value="">All Categories</option>
-                <option value="Mess" {selected['Mess']}>Mess</option>
-                <option value="Hostel" {selected['Hostel']}>Hostel</option>
-                <option value="Rental Room" {selected['Rental Room']}>
-                    Rental Room
-                </option>
-                <option value="Library" {selected['Library']}>Library</option>
-            </select>
-
-            <button type="submit">Search</button>
-            <a class="btn" href="/search">Clear</a>
-        </form>
-    </div>
-    <div class="grid">{cards}</div>
-    """
-    return page("Search Resources", content)
-
-
-# ---------------- RESOURCE DETAILS ----------------
-
-@app.route("/resource/<int:resource_id>")
-@login_required
-def resource_detail(resource_id):
-    conn = get_db()
-    resource = conn.execute(
-        "SELECT * FROM resources WHERE id = ?", (resource_id,)
-    ).fetchone()
-    conn.close()
-
-    if resource is None:
-        return page(
-            "Not Found",
-            "<h2>Resource not found.</h2><a class='btn' href='/'>Go Home</a>"
-        ), 404
-
-    name = escape(resource["name"])
-    category = escape(resource["category"])
-    description = escape(resource["description"])
-    location = escape(resource["location"])
-    price = escape(resource["price"])
-    contact = escape(resource["contact"])
-    image = escape(resource["image"] or "", quote=True)
-
-    content = f"""
-    <div class="details">
-        <img src="{image}" alt="Resource image"
-             onerror="this.style.display='none'">
-        <h1>{name}</h1>
-        <span class="category">{category}</span>
-        <p><strong>Description:</strong> {description}</p>
-        <p><strong>Location:</strong> {location}</p>
-        <p><strong>Price:</strong> <span class="price">{price}</span></p>
-        <p><strong>Contact:</strong> {contact}</p>
-        <a class="btn" href="/search">Back to Search</a>
-        <a class="btn" href="/">Home</a>
-    </div>
-    """
-    return page("Resource Details", content)
-
-
-# ---------------- LOGOUT ----------------
+@app.route("/login", methods=["GET","POST"])
+def login():
+    if request.method=="POST":
+        email=request.form.get("email","").strip().lower()
+        password=request.form.get("password","")
+        user=query("SELECT * FROM users WHERE email=%s",(email,),one=True)
+        if user and check_password_hash(user["password_hash"],password):
+            session.clear()
+            session.update(user_id=user["id"],name=user["name"],role=user["role"])
+            flash("Welcome back, "+user["name"]+".","success")
+            return redirect(url_for("admin_dashboard" if user["role"]=="admin" else "provider_dashboard" if user["role"]=="provider" else "index"))
+        flash("Invalid email or password.","danger")
+    return render_template("login.html")
 
 @app.route("/logout")
 def logout():
     session.clear()
-    flash("You have been logged out.")
-    return redirect(url_for("login"))
+    flash("You have been logged out.","info")
+    return redirect(url_for("index"))
 
+@app.route("/provider")
+@login_required
+@role_required("provider")
+def provider_dashboard():
+    listings=query("SELECT * FROM listings WHERE provider_id=%s ORDER BY created_at DESC",(session["user_id"],))
+    return render_template("provider.html", listings=listings)
 
-# ---------------- START APPLICATION ----------------
+@app.route("/provider/listing/new", methods=["GET","POST"])
+@login_required
+@role_required("provider")
+def new_listing():
+    if request.method=="POST":
+        title=request.form.get("title","").strip()
+        category=request.form.get("category","")
+        location=request.form.get("location","").strip()
+        price=request.form.get("price","0")
+        description=request.form.get("description","").strip()
+        contact=request.form.get("contact","").strip()
+        details=request.form.get("details","").strip()
+        try: price=float(price)
+        except ValueError: price=-1
+        if not title or category not in ("Hostel","Rental Room","PG","Mess","Private Library") or not location or price<0:
+            flash("Complete all required fields with a valid price.","danger")
+        else:
+            query("""INSERT INTO listings(provider_id,title,category,location,price,description,contact,details,status)
+                     VALUES(%s,%s,%s,%s,%s,%s,%s,%s,'pending')""",
+                  (session["user_id"],title,category,location,price,description,contact,details),commit=True)
+            flash("Listing submitted. It will appear publicly after admin approval.","success")
+            return redirect(url_for("provider_dashboard"))
+    return render_template("listing_form.html")
 
-# Create database tables and sample resources when the app starts.
-init_db()
+@app.route("/review/<int:listing_id>", methods=["POST"])
+@login_required
+@role_required("student")
+def add_review(listing_id):
+    if not query("SELECT id FROM listings WHERE id=%s AND status='approved'",(listing_id,),one=True): abort(404)
+    try: rating=int(request.form.get("rating","5"))
+    except ValueError: rating=5
+    rating=max(1,min(5,rating))
+    comment=request.form.get("comment","").strip()
+    existing=query("SELECT id FROM reviews WHERE listing_id=%s AND student_id=%s",(listing_id,session["user_id"]),one=True)
+    if existing:
+        query("UPDATE reviews SET rating=%s,comment=%s WHERE id=%s",(rating,comment,existing["id"]),commit=True)
+        flash("Your review was updated.","success")
+    else:
+        query("INSERT INTO reviews(listing_id,student_id,rating,comment) VALUES(%s,%s,%s,%s)",
+              (listing_id,session["user_id"],rating,comment),commit=True)
+        flash("Thanks for your feedback.","success")
+    return redirect(url_for("listing_detail",listing_id=listing_id))
+
+@app.route("/admin")
+@login_required
+@role_required("admin")
+def admin_dashboard():
+    pending=query("""SELECT l.*,u.name AS provider_name FROM listings l JOIN users u ON u.id=l.provider_id
+                     WHERE l.status='pending' ORDER BY l.created_at ASC""")
+    listings=query("""SELECT l.*,u.name AS provider_name FROM listings l JOIN users u ON u.id=l.provider_id
+                      ORDER BY l.created_at DESC""")
+    users=query("SELECT id,name,email,role,created_at FROM users ORDER BY created_at DESC")
+    return render_template("admin.html",pending=pending,listings=listings,users=users)
+
+@app.route("/admin/listing/<int:listing_id>/<action>", methods=["POST"])
+@login_required
+@role_required("admin")
+def moderate_listing(listing_id,action):
+    if action not in ("approve","reject","remove"): abort(400)
+    status={"approve":"approved","reject":"rejected","remove":"removed"}[action]
+    query("UPDATE listings SET status=%s WHERE id=%s",(status,listing_id),commit=True)
+    flash("Listing status updated.","success")
+    return redirect(url_for("admin_dashboard"))
+
+@app.errorhandler(403)
+def forbidden(error):
+    return render_template("error.html", code=403, message="You do not have permission to view this page."),403
+@app.errorhandler(404)
+def not_found(error):
+    return render_template("error.html", code=404, message="The page or listing could not be found."),404
 
 if __name__ == "__main__":
-    app.run(debug=True)
-
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")), debug=False)
